@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* High-contrast overrides */
+.high-contrast .text-gray-400 { color: #111827 !important; font-weight: 600 !important; }
+.high-contrast .text-gray-500 { color: #111827 !important; font-weight: 600 !important; }
+.high-contrast .text-gray-600 { color: #111827 !important; font-weight: 600 !important; }
+.high-contrast .text-gray-700 { color: #0f172a !important; font-weight: 600 !important; }
+.high-contrast .text-gray-800 { color: #0b1220 !important; font-weight: 700 !important; }
+
+.high-contrast .placeholder:text-gray-400::placeholder { color: #111827 !important; font-weight: 600 !important; }
+.high-contrast .placeholder:text-gray-500::placeholder { color: #111827 !important; font-weight: 600 !important; }
+
+/* Icon color bumps when relying on text-gray-* */
+.high-contrast svg.text-gray-400, 
+.high-contrast svg.text-gray-500, 
+.high-contrast svg.text-gray-600, 
+.high-contrast svg.text-gray-700 { color: #111827 !important; }
