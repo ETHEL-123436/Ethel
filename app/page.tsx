@@ -1,4 +1,6 @@
-import { UserButton } from '@clerk/nextjs';
+'use client';
+
+import { UserButton, useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -9,9 +11,54 @@ import {
   MapPin, 
   Clock,
   Star,
-  ArrowRight
+  ArrowRight,
+  LayoutDashboard
 } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
+// Separate component for auth buttons
+function AuthButtons() {
+  const { isSignedIn, user } = useUser();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user?.publicMetadata?.role === 'admin') {
+      setIsAdmin(true);
+    }
+  }, [user]);
+
+  if (isSignedIn) {
+    return (
+      <div className="flex items-center space-x-4">
+        {isAdmin && (
+          <Link href="/admin/dashboard">
+            <Button variant="ghost" className="text-gray-700 hover:text-blue-600 flex items-center gap-1">
+              <LayoutDashboard className="h-4 w-4" />
+              Admin
+            </Button>
+          </Link>
+        )}
+        <UserButton afterSignOutUrl="/" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-4">
+      <Link href="/sign-in">
+        <Button variant="ghost" className="text-gray-700 hover:text-blue-600">
+          Sign In
+        </Button>
+      </Link>
+      <Link href="/sign-up">
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          Get Started
+        </Button>
+      </Link>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
@@ -24,18 +71,7 @@ export default function Home() {
               <Car className="h-8 w-8 text-blue-600" />
               <span className="text-2xl font-bold text-gray-900">RideConnect</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/sign-in">
-                <Button variant="ghost" className="text-gray-700 hover:text-blue-600">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href="/sign-up">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Get Started
-                </Button>
-              </Link>
-            </div>
+            <AuthButtons />
           </div>
         </div>
       </nav>

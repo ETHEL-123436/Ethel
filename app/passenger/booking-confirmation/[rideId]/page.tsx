@@ -26,7 +26,7 @@ export default function BookingConfirmationPage() {
     status: 'confirmed',
     driver: {
       name: 'Sarah Johnson',
-      phone: '+1 (555) 123-4567',
+      phone: '+237 6XX XXX XXX',
       avatar: 'SJ'
     },
     from: 'Downtown Plaza',
@@ -34,11 +34,11 @@ export default function BookingConfirmationPage() {
     date: 'Today, Dec 15',
     time: '2:30 PM',
     seats: 1,
-    total: 28,
+    total: 28000,
     car: {
       model: 'Toyota Camry',
       color: 'Silver',
-      plate: 'ABC-1234'
+      plate: 'CE 1234 AB'
     }
   };
 
@@ -47,11 +47,11 @@ export default function BookingConfirmationPage() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Success Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-green-200">
+            <CheckCircle className="h-10 w-10 text-green-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Booking Confirmed!</h1>
-          <p className="text-gray-600">Your ride has been successfully booked</p>
+          <p className="text-gray-700">Your ride has been successfully booked</p>
         </div>
 
         {/* Booking Details */}
@@ -70,7 +70,7 @@ export default function BookingConfirmationPage() {
               </div>
               <div>
                 <span className="text-gray-600">Total Paid</span>
-                <p className="font-semibold text-lg">${booking.total}</p>
+                <p className="font-bold text-lg">{booking.total.toLocaleString()} XAF</p>
               </div>
             </div>
             
@@ -116,8 +116,8 @@ export default function BookingConfirmationPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 font-semibold">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                <span className="text-gray-800 font-semibold">
                   {booking.driver.avatar}
                 </span>
               </div>
@@ -146,21 +146,21 @@ export default function BookingConfirmationPage() {
             <CardTitle>Important Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex items-start space-x-2">
-              <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-              <p>Please arrive at the pickup location 5 minutes before departure time</p>
+            <div className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-gray-800 rounded-full mt-2"></div>
+              <p className="text-gray-700">Please arrive at the pickup location 5 minutes before departure time</p>
             </div>
-            <div className="flex items-start space-x-2">
-              <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-              <p>Your driver will contact you when they arrive at the pickup location</p>
+            <div className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-gray-800 rounded-full mt-2"></div>
+              <p className="text-gray-700">Your driver will contact you when they arrive at the pickup location</p>
             </div>
-            <div className="flex items-start space-x-2">
-              <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-              <p>Free cancellation up to 2 hours before departure</p>
+            <div className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-gray-800 rounded-full mt-2"></div>
+              <p className="text-gray-700">Free cancellation up to 2 hours before departure</p>
             </div>
-            <div className="flex items-start space-x-2">
-              <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-              <p>Keep your booking ID handy for reference</p>
+            <div className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-gray-800 rounded-full mt-2"></div>
+              <p className="text-gray-700">Keep your booking ID handy for reference</p>
             </div>
           </CardContent>
         </Card>
@@ -169,7 +169,7 @@ export default function BookingConfirmationPage() {
         <div className="space-y-3">
           <Button 
             onClick={() => router.push('/passenger/dashboard')}
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full bg-gray-900 hover:bg-gray-800 text-white"
           >
             Go to Dashboard
           </Button>

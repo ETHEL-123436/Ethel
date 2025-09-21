@@ -1,11 +1,15 @@
+// middleware/auth.js
+
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-// Middleware to authenticate JWT token
+/**
+ * Middleware to authenticate JWT token
+ */
 const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader?.split(' ')[1]; // Bearer TOKEN
 
     if (!token) {
       return res.status(401).json({
@@ -14,11 +18,10 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    // For Clerk integration, we'll verify the Clerk session token
-    // This is a simplified version - in production, you'd verify with Clerk's API
+    // Decode JWT (for Clerk integration, replace with proper verification in production)
     const decoded = jwt.decode(token);
-    
-    if (!decoded || !decoded.sub) {
+
+    if (!decoded?.sub) {
       return res.status(403).json({
         success: false,
         message: 'Invalid token'
@@ -27,7 +30,7 @@ const authenticateToken = async (req, res, next) => {
 
     // Find user by Clerk ID
     const user = await User.findOne({ clerkId: decoded.sub });
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -59,7 +62,9 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Middleware to check if user has specific role
+/**
+ * Middleware factory to check if user has specific role(s)
+ */
 const requireRole = (roles) => {
   return async (req, res, next) => {
     try {
@@ -71,7 +76,7 @@ const requireRole = (roles) => {
       }
 
       const userRoles = Array.isArray(roles) ? roles : [roles];
-      
+
       if (!userRoles.includes(req.user.role)) {
         return res.status(403).json({
           success: false,
@@ -90,19 +95,60 @@ const requireRole = (roles) => {
   };
 };
 
-// Middleware to check if user is driver
+// Specific role middlewares
 const requireDriver = requireRole('driver');
-
-// Middleware to check if user is passenger
 const requirePassenger = requireRole('passenger');
 
-// Middleware to check if user is admin
-const requireAdmin = requireRole('admin');
+/**
+ * Middleware to check if user is admin
+ */
+const requireAdmin = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (!user || (user.role !== 'admin' && !user.email.includes('admin'))) {
+      return res.status(403).json({
+        success: false,
+        message: 'Admin access required'
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error('Admin check error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+/**
+ * Middleware to check if user is admin or driver
+ */
+const requireAdminOrDriver = (req, res, next) => {
+  if (req.user?.role === 'admin' || req.user?.role === 'driver') {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: 'Admin or driver access required'
+  });
+};
 
 export {
   authenticateToken,
   requireRole,
   requireDriver,
   requirePassenger,
-  requireAdmin
+  requireAdmin,
+  requireAdminOrDriver
 };

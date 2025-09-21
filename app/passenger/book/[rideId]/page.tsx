@@ -32,7 +32,7 @@ export default function BookRidePage() {
       name: 'Sarah Johnson',
       rating: 4.9,
       totalRides: 156,
-      phone: '+1 (555) 123-4567',
+      phone: '+237 6XX XXX XXX',
       email: 'sarah.j@email.com',
       avatar: 'SJ'
     },
@@ -40,14 +40,14 @@ export default function BookRidePage() {
     to: 'International Airport',
     departureTime: '2:30 PM',
     date: 'Today, Dec 15',
-    price: 25,
+    price: 15000, // Updated to XAF
     seatsAvailable: 2,
     duration: '45 min',
-    distance: '28 miles',
+    distance: '28 km',
     car: {
       model: 'Toyota Camry',
       color: 'Silver',
-      plate: 'ABC-1234',
+      plate: 'CE 1234 AB',
       year: 2022
     },
     amenities: ['AC', 'Music', 'Phone Charger', 'WiFi'],
@@ -76,7 +76,7 @@ export default function BookRidePage() {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -90,8 +90,8 @@ export default function BookRidePage() {
               Back
             </Button>
             <div>
-              <h1 className="text-xl font-semibold text-blue-300">Book Your Ride</h1>
-              <p className="text-sm text-blue-600">Complete your booking</p>
+              <h1 className="text-xl font-semibold text-gray-800">Book Your Ride</h1>
+              <p className="text-sm text-gray-600">Complete your booking</p>
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function BookRidePage() {
                   <MapPin className="h-5 w-5 text-green-600" />
                   <div>
                     <p className="font-medium">{ride.from}</p>
-                    <p className="text-sm text-blue-600">{ride.pickupLocation}</p>
+                    <p className="text-sm text-gray-700">{ride.pickupLocation}</p>
                   </div>
                 </div>
                 
@@ -123,7 +123,7 @@ export default function BookRidePage() {
                   <MapPin className="h-5 w-5 text-red-600" />
                   <div>
                     <p className="font-medium">{ride.to}</p>
-                    <p className="text-sm text-blue-600">{ride.dropoffLocation}</p>
+                    <p className="text-sm text-gray-700">{ride.dropoffLocation}</p>
                   </div>
                 </div>
                 
@@ -143,7 +143,7 @@ export default function BookRidePage() {
                     <span>{ride.duration} • {ride.distance}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-blue-600">Available:</span>
+                    <span className="text-gray-700 font-medium">Available:</span>
                     <span className="font-medium">{ride.seatsAvailable} seats</span>
                   </div>
                 </div>
@@ -170,25 +170,25 @@ export default function BookRidePage() {
                         <span className="text-sm font-medium">{ride.driver.rating}</span>
                       </div>
                     </div>
-                    <p className="text-sm text-blue-300 mb-3">{ride.driver.totalRides} rides completed</p>
+                    <p className="text-sm text-gray-600 mb-3">{ride.driver.totalRides} rides completed</p>
                     
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
-                        <Car className="h-4 w-4 text-blue-300" />
+                        <Car className="h-4 w-4 text-gray-600" />
                         <span>{ride.car.year} {ride.car.model}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-blue-300">Color:</span>
+                        <span className="text-gray-600 font-medium">Color:</span>
                         <span>{ride.car.color}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-blue-300">Plate:</span>
+                        <span className="text-gray-600 font-medium">Plate:</span>
                         <span className="font-mono">{ride.car.plate}</span>
                       </div>
                     </div>
                     
                     <div className="mt-3">
-                      <p className="text-sm text-blue-300 mb-2">Amenities:</p>
+                      <p className="text-sm text-gray-700 font-medium mb-2">Amenities:</p>
                       <div className="flex flex-wrap gap-2">
                         {ride.amenities.map((amenity, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
@@ -231,8 +231,8 @@ export default function BookRidePage() {
                       </Button>
                     </div>
                   </div>
-                  <p className="text-sm text-blue-300">
-                    ${ride.price} per seat • {ride.seatsAvailable} seats available
+                  <p className="text-sm text-gray-700">
+                    {ride.price.toLocaleString()} XAF per seat • {ride.seatsAvailable} seats available
                   </p>
                 </div>
               </CardContent>
@@ -263,7 +263,7 @@ export default function BookRidePage() {
                 </div>
                 
                 {paymentMethod === 'card' && (
-                  <div className="space-y-3 mt-4 p-4 bg-blue-50 rounded-lg">
+                  <div className="space-y-3 mt-4 p-4 bg-gray-50 rounded-lg border">
                     <Input placeholder="Card Number" />
                     <div className="grid grid-cols-2 gap-3">
                       <Input placeholder="MM/YY" />
@@ -286,25 +286,25 @@ export default function BookRidePage() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span>Ride fare ({selectedSeats} seat{selectedSeats > 1 ? 's' : ''})</span>
-                    <span>${totalPrice}</span>
+                    <span>{totalPrice.toLocaleString()} XAF</span>
                   </div>
-                  <div className="flex justify-between text-sm text-blue-300">
+                  <div className="flex justify-between text-sm text-gray-600">
                     <span>Service fee</span>
-                    <span>${serviceFee}</span>
+                    <span>{serviceFee.toLocaleString()} XAF</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between font-semibold text-lg">
+                  <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span>${finalTotal}</span>
+                    <span>{finalTotal.toLocaleString()} XAF</span>
                   </div>
                 </div>
                 
                 <div className="space-y-3 pt-4">
-                  <div className="flex items-center space-x-2 text-sm text-blue-300">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Shield className="h-4 w-4" />
                     <span>Your payment is protected</span>
                   </div>
-                  <div className="text-xs text-blue-300">
+                  <div className="text-xs text-gray-600">
                     Free cancellation up to 2 hours before departure
                   </div>
                 </div>
@@ -312,10 +312,10 @@ export default function BookRidePage() {
                 <Button 
                   onClick={handleBooking}
                   disabled={isLoading}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white"
                   size="lg"
                 >
-                  {isLoading ? 'Processing...' : `Book Ride - $${finalTotal}`}
+                  {isLoading ? 'Processing...' : `Book Ride - ${finalTotal.toLocaleString()} XAF`}
                 </Button>
               </CardContent>
             </Card>

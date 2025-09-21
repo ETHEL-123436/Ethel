@@ -244,8 +244,7 @@ export default function PassengerDashboard() {
                             <span>{ride.date} at {ride.departureTime}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <DollarSign className="h-4 w-4" />
-                            <span className="font-bold text-gray-900">${ride.price}</span>
+                            <span className="font-bold text-gray-900">{ride.price.toLocaleString()} XAF</span>
                           </div>
                         </div>
                         <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
@@ -278,7 +277,7 @@ export default function PassengerDashboard() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-gray-900">Money Saved</span>
-                    <span className="font-bold text-green-600">$340</span>
+                    <span className="font-bold text-green-600">340 XAF</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-gray-900">Rating</span>
@@ -311,7 +310,7 @@ export default function PassengerDashboard() {
                           <p className="font-medium text-gray-800">{ride.date}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium">${ride.amount}</p>
+                          <p className="text-sm font-medium">{ride.amount} XAF</p>
                           <Badge variant="outline" className="text-xs">
                             {ride.status}
                           </Badge>
