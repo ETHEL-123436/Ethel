@@ -10,12 +10,11 @@ import MapComponent from '@/components/mapComponents';
 import { 
   MapPin, 
   Search, 
-  Clock, 
-  Star, 
-  Car,
   Filter,
   Calendar,
-  DollarSign
+  Clock,
+  Star,
+  Car
 } from 'lucide-react';
 import Link from 'next/link';
 

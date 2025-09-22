@@ -10,14 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Users, 
   Car, 
-  DollarSign, 
   AlertTriangle,
   TrendingUp,
   MapPin,
-  Clock,
-  Star,
-  Phone,
-  Mail,
   Search,
   Filter,
   Download,
@@ -27,7 +22,8 @@ import {
   XCircle,
   Settings,
   BarChart3,
-  PieChart
+  PieChart,
+  Mail
 } from 'lucide-react';
 
 export default function AdminDashboard() {

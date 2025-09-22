@@ -22,11 +22,19 @@ export async function processPayment(
       success: true,
       data: response.data,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const axiosError = error as {
+      response?: {
+        data?: {
+          error?: string;
+        };
+      };
+      message?: string;
+    };
     console.error(`Error processing ${provider} payment:`, error);
     return {
       success: false,
-      error: error.response?.data?.error || error.message,
+      error: axiosError.response?.data?.error || axiosError.message || 'An unknown error occurred',
     };
   }
 }

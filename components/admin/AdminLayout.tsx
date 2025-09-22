@@ -6,10 +6,12 @@ import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Users, Activity, Settings, LogOut } from 'lucide-react';
 import { ReactNode } from 'react';
 
+import { LucideIcon } from 'lucide-react';
+
 interface NavItem {
   name: string;
   href: string;
-  icon: any; // Using 'any' for Lucide icons
+  icon: LucideIcon;
 }
 
 const navigation: NavItem[] = [

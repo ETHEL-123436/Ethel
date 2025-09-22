@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
-import crypto from 'crypto';
 
 export async function POST(request: Request) {
   try {
@@ -14,12 +13,12 @@ export async function POST(request: Request) {
     // Generate a unique order ID
     const orderId = `ORD-${Date.now()}`;
     
-    // Create a signature
-    const signatureData = `${merchantKey}${phone}${amount}${orderId}${reference}`;
-    const signature = crypto
-      .createHash('sha256')
-      .update(signatureData)
-      .digest('hex');
+    // Generate signature for request validation (commented out as it's not used in the current request)
+    // const signatureData = `${merchantKey}${phone}${amount}${orderId}${reference}`;
+    // const signature = crypto
+    //   .createHash('sha256')
+    //   .update(signatureData)
+    //   .digest('hex');
 
     // Orange Money API endpoint (sandbox)
     const url = 'https://api.orange.com/orange-money-webpay/dev/v1/webpayment';
@@ -52,14 +51,26 @@ export async function POST(request: Request) {
       paymentUrl: response.data.payment_url,
       status: response.status,
     });
-  } catch (error: any) {
-    console.error('Orange Money Payment Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    let errorMessage = 'An unknown error occurred';
+    let statusCode = 500;
+    let errorData: Record<string, unknown> = {};
+
+    if (axios.isAxiosError(error)) {
+      errorMessage = error.response?.data?.message || error.message;
+      statusCode = error.response?.status || 500;
+      errorData = error.response?.data || {};
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error('Orange Money Payment Error:', errorMessage, errorData);
     return NextResponse.json(
       { 
         success: false, 
-        error: error.response?.data?.message || error.message 
+        error: errorMessage,
+        ...(Object.keys(errorData).length > 0 && { details: errorData })
       },
-      { status: error.response?.status || 500 }
+      { status: statusCode }
     );
   }
 }

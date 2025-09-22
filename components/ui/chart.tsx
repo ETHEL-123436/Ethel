@@ -69,7 +69,7 @@ ChartContainer.displayName = 'Chart';
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
-    ([_, config]) => config.theme || config.color
+    ([, itemConfig]) => itemConfig.theme || itemConfig.color
   );
 
   if (!colorConfig.length) {
@@ -111,11 +111,23 @@ const ChartTooltipContent = React.forwardRef<
       indicator?: 'line' | 'dot' | 'dashed';
       nameKey?: string;
       labelKey?: string;
-      payload?: any[];
-      label?: any;
-      labelFormatter?: (value: any, payload: any[]) => React.ReactNode;
+      payload?: Array<{
+        name: string;
+        value: string | number;
+        payload: Record<string, unknown>;
+        color: string;
+        dataKey: string;
+      }>;
+      label?: string | number;
+      labelFormatter?: (value: string | number, payload: Array<Record<string, unknown>>) => React.ReactNode;
       labelClassName?: string;
-      formatter?: (value: any, name: any, item: any, index: number, payload: any) => React.ReactNode;
+      formatter?: (
+        value: string | number,
+        name: string,
+        item: Record<string, unknown>,
+        index: number,
+        payload: Array<Record<string, unknown>>
+      ) => React.ReactNode;
       color?: string;
     }
 >(
@@ -133,8 +145,7 @@ const ChartTooltipContent = React.forwardRef<
       formatter,
       color,
       nameKey,
-      labelKey,
-      ...props
+      labelKey
     },
     ref
   ) => {
@@ -206,7 +217,13 @@ const ChartTooltipContent = React.forwardRef<
                 )}
               >
                 {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value, item.name, item, index, item.payload)
+                  formatter(
+                    item.value,
+                    item.name,
+                    item as unknown as Record<string, unknown>,
+                    index,
+                    payload as unknown as Array<Record<string, unknown>>
+                  )
                 ) : (
                   <>
                     {itemConfig?.icon ? (
@@ -270,7 +287,15 @@ const ChartLegendContent = React.forwardRef<
   React.ComponentProps<'div'> & {
       hideIcon?: boolean;
       nameKey?: string;
-      payload?: any[];
+      payload?: Array<{
+        value: string | number;
+        id: string;
+        type?: string;
+        color: string;
+        dataKey?: string;
+        name?: string;
+        payload: Record<string, unknown>;
+      }>;
       verticalAlign?: 'top' | 'bottom';
     }
 >(

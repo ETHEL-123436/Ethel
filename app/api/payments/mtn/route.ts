@@ -6,8 +6,10 @@ export async function POST(request: Request) {
     const { phone, amount, reference } = await request.json();
     
     // MTN API credentials - these should be in your environment variables
-    const apiKey = process.env.MTN_API_KEY;
     const subscriptionKey = process.env.MTN_SUBSCRIPTION_KEY;
+    if (!subscriptionKey) {
+      throw new Error('MTN subscription key is not configured');
+    }
     const targetEnvironment = process.env.MTN_TARGET_ENVIRONMENT || 'sandbox';
     const currency = 'XAF';
 
@@ -46,14 +48,26 @@ export async function POST(request: Request) {
       status: response.status,
       data: response.data,
     });
-  } catch (error: any) {
-    console.error('MTN Payment Error:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    let errorMessage = 'An unknown error occurred';
+    let statusCode = 500;
+    let errorData: Record<string, unknown> = {};
+
+    if (axios.isAxiosError(error)) {
+      errorMessage = error.response?.data?.message || error.message;
+      statusCode = error.response?.status || 500;
+      errorData = error.response?.data || {};
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error('MTN Payment Error:', errorMessage, errorData);
     return NextResponse.json(
       { 
         success: false, 
-        error: error.response?.data?.message || error.message 
+        error: errorMessage,
+        ...(Object.keys(errorData).length > 0 && { details: errorData })
       },
-      { status: error.response?.status || 500 }
+      { status: statusCode }
     );
   }
 }

@@ -32,10 +32,11 @@ export async function POST(request: Request) {
       paymentUrl: result.paymentUrl,
       orderId: result.orderId,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     console.error('Orange Money API error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to process payment' },
+      { success: false, error: `Failed to process payment: ${errorMessage}` },
       { status: 500 }
     );
   }
@@ -68,10 +69,11 @@ export async function GET(request: Request) {
       status: result.status,
       data: result.data,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     console.error('Error checking payment status:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to check payment status' },
+      { success: false, error: `Failed to check payment status: ${errorMessage}` },
       { status: 500 }
     );
   }

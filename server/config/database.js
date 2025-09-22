@@ -36,6 +36,12 @@ if (!cached) {
 }
 
 const connectDB = async () => {
+  // Check for MONGODB_URI
+  if (!process.env.MONGODB_URI) {
+    console.warn('⚠️  MONGODB_URI is not defined in environment variables');
+    return null;
+  }
+
   // If we have a cached connection, return it
   if (cached.conn) {
     console.log('Using cached database connection');
@@ -51,6 +57,7 @@ const connectDB = async () => {
       };
 
       // Store the connection promise in the cache
+      console.log('Connecting to MongoDB...');
       cached.promise = mongoose.connect(process.env.MONGODB_URI, opts);
     }
 

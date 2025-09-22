@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,8 @@ type UserWithMetadata = {
   unsafeMetadata?: UserMetadata;
 };
 
-export default function OnboardingPage() {
+// Main content component that uses useSearchParams
+function OnboardingContent() {
   const { user, isLoaded: isUserLoaded } = useUser() as { user: UserWithMetadata | null; isLoaded: boolean };
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,7 +29,7 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const role = searchParams.get('role') as 'passenger' | 'driver' | null;
+    const role = searchParams.get('role') as UserRole | null;
     if (role && (role === 'passenger' || role === 'driver')) {
       setSelectedRole(role);
     }
@@ -58,7 +59,6 @@ export default function OnboardingPage() {
       router.push(redirectPath);
     } catch (error) {
       console.error('Error updating user role:', error);
-      // You might want to show a toast or error message to the user here
     } finally {
       setIsLoading(false);
     }
@@ -81,8 +81,7 @@ export default function OnboardingPage() {
             Welcome to RideConnect, {user.firstName || 'there'}!
           </h1>
           <p className="text-lg text-gray-800 max-w-2xl mx-auto">
-            Let`s get you set up. Choose your role to customize your experience and 
-            connect with the right community.
+            Let&apos;s get you set up. Choose your role to customize your experience.
           </p>
         </div>
 
@@ -149,24 +148,20 @@ export default function OnboardingPage() {
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-gray-800 mb-6">
-                Share your journey and earn money while helping others travel.
+                Want to earn money by giving rides to passengers.
               </p>
               <ul className="text-sm space-y-3 text-left max-w-sm mx-auto">
                 <li className="flex items-center space-x-2">
                   <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                  <span>Earn from empty seats</span>
+                  <span>Earn money on your schedule</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                  <span>Reduce travel costs</span>
+                  <span>Meet new people</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                  <span>Build your community</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                  <span>Flexible schedule</span>
+                  <span>Help reduce traffic and emissions</span>
                 </li>
               </ul>
               {selectedRole === 'driver' && (
@@ -178,34 +173,39 @@ export default function OnboardingPage() {
           </Card>
         </div>
 
-        <div className="text-center">
-          <Button
+        <div className="max-w-md mx-auto">
+          <Button 
             onClick={handleRoleSelection}
             disabled={!selectedRole || isLoading}
+            className="w-full py-6 text-lg"
             size="lg"
-            className={`px-8 ${
-              selectedRole === 'driver' 
-                ? 'bg-green-600 hover:bg-green-700' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
           >
             {isLoading ? (
-              'Setting up your account...'
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Processing...
+              </>
             ) : (
               <>
-                Continue as {selectedRole === 'driver' ? 'Driver' : 'Passenger'}
-                <ArrowRight className="ml-2 h-5 w-5" />
+                Continue as {selectedRole || '...'} <ArrowRight className="ml-2 h-5 w-5" />
               </>
             )}
           </Button>
-          
-          {selectedRole && (
-            <p className="text-sm text-gray-700 mt-4">
-              You can always change your role later in your profile settings.
-            </p>
-          )}
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrapper component that uses Suspense
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <OnboardingContent />
+    </Suspense>
   );
 }

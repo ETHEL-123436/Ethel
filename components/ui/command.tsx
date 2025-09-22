@@ -23,9 +23,7 @@ const Command = React.forwardRef<
 ));
 Command.displayName = CommandPrimitive.displayName;
 
-interface CommandDialogProps extends DialogProps {}
-
-const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
+const CommandDialog = ({ children, ...props }: DialogProps) => {
   return (
     <Dialog {...props}>
       <DialogContent className="overflow-hidden p-0 shadow-lg">
@@ -37,22 +35,54 @@ const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
   );
 };
 
-const CommandInput = React.forwardRef<
-  React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-    <CommandPrimitive.Input
-      ref={ref}
-      className={cn(
-        'flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
-        className
-      )}
-      {...props}
-    />
-  </div>
-));
+// Define the input props we want to use
+interface CommandInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  value?: string;
+  onValueChange?: (search: string) => void;
+  className?: string;
+  placeholder?: string;
+  disabled?: boolean;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  autoFocus?: boolean;
+}
+
+const CommandInput = React.forwardRef<HTMLInputElement, CommandInputProps>(
+  ({ 
+    className, 
+    value, 
+    onValueChange, 
+    placeholder, 
+    disabled, 
+    'aria-label': ariaLabel,
+    'aria-labelledby': ariaLabelledBy,
+    autoFocus,
+    ...props 
+  }, ref) => {
+    return (
+      <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+        <CommandPrimitive.Input
+          ref={ref}
+          value={value}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            onValueChange?.(e.target.value);
+          }}
+          className={cn(
+            'flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
+            className
+          )}
+          placeholder={placeholder}
+          disabled={disabled}
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabelledBy}
+          autoFocus={autoFocus}
+          {...props}
+        />
+      </div>
+    );
+  }
+);
 
 CommandInput.displayName = CommandPrimitive.Input.displayName;
 

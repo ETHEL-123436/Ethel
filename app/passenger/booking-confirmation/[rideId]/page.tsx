@@ -8,7 +8,6 @@ import {
   CheckCircle, 
   MapPin, 
   Clock, 
-  Car,
   Phone,
   MessageCircle,
   Calendar,

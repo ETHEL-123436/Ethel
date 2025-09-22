@@ -86,9 +86,18 @@ export default function MapComponent({
     }
   };
 
+  // Extend the Window interface to include the google object
+  interface WindowWithGoogle extends Window {
+    google?: {
+      maps: {
+        Size: new (width: number, height: number) => google.maps.Size;
+      };
+    };
+  }
+
   const getSize = (w: number, h: number) => {
-    if (typeof window !== 'undefined' && (window as any).google?.maps) {
-      return new (window as any).google.maps.Size(w, h);
+    if (typeof window !== 'undefined' && (window as WindowWithGoogle).google?.maps) {
+      return new (window as WindowWithGoogle).google!.maps.Size(w, h);
     }
     return undefined;
   };

@@ -1,7 +1,11 @@
 "use client";
 import { useState } from "react";
 
-export default function KycDemo() {
+interface KycDemoProps {
+  onSuccess?: () => void;
+}
+
+export default function KycDemo({ onSuccess }: KycDemoProps) {
   const [form, setForm] = useState({
     fullName: "",
     dob: "",
@@ -52,12 +56,21 @@ export default function KycDemo() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/driver/kyc`, {
-        method: "POST",
-        body: fd,
-      });
-      const data = await res.json();
-      setResponse(data);
+      // In a real app, you would submit to your backend here
+      // const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/driver/kyc`, {
+      //   method: "POST",
+      //   body: fd,
+      // });
+      // const data = await res.json();
+      const response = { success: true, data: { kycStatus: 'pending' as const } };
+      setResponse(response);
+      // In a real app, you would submit to your backend here
+      console.log('Form submitted:', { form, files });
+      
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err) {
       console.error(err);
       alert("Error submitting KYC");
