@@ -16,8 +16,9 @@ interface UserMetadata {
 
 type UserWithMetadata = {
   firstName: string | null;
-  update: (params: { unsafeMetadata: UserMetadata }) => Promise<void>;
-  unsafeMetadata?: UserMetadata;
+  update: (params: { unsafe_metadata: UserMetadata }) => Promise<void>;
+  unsafe_metadata?: UserMetadata;
+  reload: () => Promise<void>;
 };
 
 // Main content component that uses useSearchParams
@@ -36,26 +37,34 @@ function OnboardingContent() {
   }, [searchParams]);
 
   const handleRoleSelection = async () => {
-    if (!selectedRole || !user) return;
+    if (!user) return;
     
+    // Default to passenger if no role is selected
+    const roleToSet = selectedRole || 'passenger';
     setIsLoading(true);
     
     try {
+      console.log('Setting role to:', roleToSet);
       // Update user metadata with selected role
       await user.update({
-        unsafeMetadata: {
-          ...(user.unsafeMetadata || {}),
-          role: selectedRole
-        } as UserMetadata
+        unsafe_metadata: {
+          ...(user.unsafe_metadata || {}),
+          role: roleToSet,
+          isKycVerified: roleToSet === 'passenger' // Auto-verify passengers
+        }
       });
+
+      console.log('Role updated, reloading user...');
+      // Force a session update
+      await user.reload();
+      console.log('User reloaded, metadata:', user.unsafe_metadata);
       
-      // Redirect to appropriate dashboard or KYC verification
-      const redirectPath = selectedRole === 'driver' 
-        ? user.unsafeMetadata?.isKycVerified 
-          ? '/driver/dashboard' 
-          : '/driver/kyc-verification'
+      // Redirect based on role
+      const redirectPath = roleToSet === 'driver' 
+        ? '/driver/kyc-verification'
         : '/passenger/dashboard';
-        
+      
+      console.log('Redirecting to:', redirectPath);
       router.push(redirectPath);
     } catch (error) {
       console.error('Error updating user role:', error);
