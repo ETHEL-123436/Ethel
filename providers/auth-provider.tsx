@@ -1,7 +1,7 @@
+import { User } from '@/types';
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect } from 'react';
-import { User } from '@/types';
+import { useEffect, useState } from 'react';
 
 export const [AuthProvider, useAuth] = createContextHook(() => {
   const [user, setUser] = useState<User | null>(null);
@@ -28,7 +28,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     setIsLoading(true);
     try {
       console.log('Attempting login with:', { email, role, password: '***' });
-      const API_BASE_URL = 'http://10.0.2.2:5000';
+      const API_BASE_URL = 'http://10.11.28.112:5000';
       
       // Make sure email is trimmed to remove any accidental whitespace
       const trimmedEmail = email.trim();
@@ -69,6 +69,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         email: userData.email,
         phone: userData.phone,
         role: userData.role,
+        status: userData.status || 'active',
         kycStatus: userData.kycStatus || 'pending',
         rating: userData.rating || 0,
         totalRides: userData.totalRides || 0,
@@ -77,11 +78,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         token
       };
 
-      console.log('Login successful, user data:', { id: userData.id, email: userData.email });
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      await AsyncStorage.setItem('token', responseData.token);
-      setUser(userData);
-      return userData;
+      console.log('Login successful, user data:', { id: user.id, email: user.email });
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await AsyncStorage.setItem('token', token);
+      setUser(user);
+      return user;
     } catch (error) {
       console.error('Login error details:', {
         error,
@@ -111,7 +112,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       console.log('Attempting registration with:', { name, email, phone, role });
       
       // Use the same API base URL as login
-      const API_BASE_URL = 'http://10.0.2.2:5000';
+      const API_BASE_URL = 'http://10.11.28.112:5000';
       
       // Trim email to remove any whitespace
       const trimmedEmail = email.trim();
@@ -156,6 +157,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         email: responseData.user.email,
         phone: responseData.user.phone,
         role: responseData.user.role,
+        status: responseData.user.status || 'active',
         kycStatus: responseData.user.kycStatus || 'pending',
         rating: responseData.user.rating || 0,
         totalRides: responseData.user.totalRides || 0,

@@ -3,7 +3,8 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  role: 'driver' | 'passenger' | 'admin';
+  role: 'driver' | 'passenger' | 'admin' | 'user';
+  status: 'active' | 'suspended' | 'banned';
   avatar?: string;
   kycStatus: 'pending' | 'approved' | 'rejected';
   rating: number;

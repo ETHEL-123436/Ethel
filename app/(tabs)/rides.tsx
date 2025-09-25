@@ -9,9 +9,10 @@ export default function RidesScreen() {
   const { user } = useAuth();
   const { rides, bookings } = useRides();
   const insets = useSafeAreaInsets();
-  
+
+  const isDriver = user?.role === 'driver';
   const myRides = rides.filter(r => r.driverId === user?.id);
-  const myBookings = bookings.filter(b => 
+  const myBookings = bookings.filter(b =>
     myRides.some(ride => ride.id === b.rideId)
   );
 
@@ -19,6 +20,91 @@ export default function RidesScreen() {
     .filter(b => b.paymentStatus === 'paid')
     .reduce((sum, b) => sum + b.totalAmount, 0);
 
+  // If user is not a driver, show passenger view
+  if (!isDriver) {
+    const passengerBookings = bookings.filter(b => b.passengerId === user?.id);
+
+    return (
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+          <Text style={styles.title}>My Bookings</Text>
+        </View>
+
+        <ScrollView style={styles.ridesList} showsVerticalScrollIndicator={false}>
+          {passengerBookings.length > 0 ? (
+            passengerBookings.map((booking) => (
+              <TouchableOpacity
+                key={booking.id}
+                style={styles.rideCard}
+                onPress={() => router.push(`../ride-details?rideId=${booking.rideId}` as any)}
+              >
+                <View style={styles.rideHeader}>
+                  <View style={styles.routeInfo}>
+                    <View style={styles.routePoint}>
+                      <View style={[styles.routeDot, { backgroundColor: '#4CAF50' }]} />
+                      <Text style={styles.routeText}>{booking.ride.origin.address}</Text>
+                    </View>
+                    <View style={styles.routeLine} />
+                    <View style={styles.routePoint}>
+                      <View style={[styles.routeDot, { backgroundColor: '#f44336' }]} />
+                      <Text style={styles.routeText}>{booking.ride.destination.address}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.price}>{booking.totalAmount} XAF</Text>
+                </View>
+
+                <View style={styles.rideDetails}>
+                  <View style={styles.detailItem}>
+                    <Clock size={16} color="#666" />
+                    <Text style={styles.detailText}>
+                      {new Date(booking.ride.dateTime).toLocaleDateString()} at{' '}
+                      {new Date(booking.ride.dateTime).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Users size={16} color="#666" />
+                    <Text style={styles.detailText}>
+                      {booking.seats} seat{booking.seats !== 1 ? 's' : ''}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={[
+                  styles.statusBadge,
+                  {
+                    backgroundColor:
+                      booking.status === 'confirmed' ? '#4CAF50' :
+                      booking.status === 'pending' ? '#ffc107' : '#f44336'
+                  }
+                ]}>
+                  <Text style={styles.statusBadgeText}>{booking.status}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Car size={48} color="#ccc" />
+              <Text style={styles.emptyText}>No bookings yet</Text>
+              <Text style={styles.emptySubtext}>
+                Search for rides to book your first journey
+              </Text>
+              <TouchableOpacity
+                style={styles.createFirstRide}
+                onPress={() => router.push('../search' as any)}
+              >
+                <Text style={styles.createFirstRideText}>Find Rides</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Driver view
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
@@ -50,7 +136,7 @@ export default function RidesScreen() {
         {myRides.length > 0 ? (
           myRides.map((ride) => {
             const rideBookings = myBookings.filter(b => b.rideId === ride.id);
-            
+
             return (
               <TouchableOpacity
                 key={ride.id}
@@ -77,9 +163,9 @@ export default function RidesScreen() {
                     <Clock size={16} color="#666" />
                     <Text style={styles.detailText}>
                       {new Date(ride.dateTime).toLocaleDateString()} at{' '}
-                      {new Date(ride.dateTime).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
+                      {new Date(ride.dateTime).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
                       })}
                     </Text>
                   </View>

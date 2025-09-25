@@ -1,72 +1,59 @@
 import { useAuth } from "@/providers/auth-provider";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { Shield } from "lucide-react-native";
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function LoginScreen() {
+export default function AdminLoginScreen() {
   const { login, isLoading } = useAuth();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'driver' | 'passenger'>('passenger');
 
-  const handleLogin = async () => {
+  const handleAdminLogin = async () => {
     const trimmedEmail = email.trim();
-    
+
     if (!trimmedEmail || !password) {
-      alert('Please enter both email and password');
+      Alert.alert('Error', 'Please enter both email and password');
       return;
     }
 
     try {
-      await login(trimmedEmail, password, role);
-      router.replace("/(tabs)/home");
+      const user = await login(trimmedEmail, password);
+      if (user.role === 'admin') {
+        router.replace("/(admin)/dashboard");
+      } else {
+        Alert.alert('Access Denied', 'You do not have admin privileges');
+        // Optionally logout or stay
+      }
     } catch (error) {
-      console.error('Login error:', error);
-      alert(error instanceof Error ? error.message : 'Login failed. Please try again.');
+      console.error('Admin login error:', error);
+      Alert.alert('Login Failed', error instanceof Error ? error.message : 'Login failed. Please try again.');
     }
   };
 
   return (
     <LinearGradient
-      colors={['#667eea', '#764ba2']}
+      colors={['#dc2626', '#b91c1c']}
       style={styles.container}
     >
       <View style={[styles.content, { paddingTop: insets.top + 40 }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to your account</Text>
+          <Shield size={60} color="white" />
+          <Text style={styles.title}>Admin Access</Text>
+          <Text style={styles.subtitle}>Authorized personnel only</Text>
         </View>
 
         <View style={styles.form}>
-          <View style={styles.roleSelector}>
-            <TouchableOpacity
-              style={[styles.roleButton, role === 'passenger' && styles.activeRole]}
-              onPress={() => setRole('passenger')}
-            >
-              <Text style={[styles.roleText, role === 'passenger' && styles.activeRoleText]}>
-                Passenger
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.roleButton, role === 'driver' && styles.activeRole]}
-              onPress={() => setRole('driver')}
-            >
-              <Text style={[styles.roleText, role === 'driver' && styles.activeRoleText]}>
-                Driver
-              </Text>
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>Admin Email</Text>
             <TextInput
               style={styles.input}
               value={email}
               onChangeText={setEmail}
-              placeholder="Enter your email"
+              placeholder="Enter admin email"
               placeholderTextColor="#999"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -79,7 +66,7 @@ export default function LoginScreen() {
               style={styles.input}
               value={password}
               onChangeText={setPassword}
-              placeholder="Enter your password"
+              placeholder="Enter password"
               placeholderTextColor="#999"
               secureTextEntry
             />
@@ -87,30 +74,19 @@ export default function LoginScreen() {
 
           <TouchableOpacity
             style={[styles.loginButton, isLoading && styles.disabledButton]}
-            onPress={handleLogin}
+            onPress={handleAdminLogin}
             disabled={isLoading}
           >
             <Text style={styles.loginButtonText}>
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? 'Signing In...' : 'Access Admin Dashboard'}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.adminLink}
-            onPress={() => router.push("/(auth)/admin-login")}
+            style={styles.backButton}
+            onPress={() => router.back()}
           >
-            <Text style={styles.adminLinkText}>
-              Admin Access
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.registerLink}
-            onPress={() => router.push("/(auth)/role-selection")}
-          >
-            <Text style={styles.registerLinkText}>
-              Don&apos;t have an account? Sign Up
-            </Text>
+            <Text style={styles.backButtonText}>Back to User Login</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -136,6 +112,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
+    marginTop: 16,
   },
   subtitle: {
     fontSize: 16,
@@ -144,29 +121,6 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 20,
-  },
-  roleSelector: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 8,
-    padding: 4,
-  },
-  roleButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 6,
-  },
-  activeRole: {
-    backgroundColor: 'white',
-  },
-  roleText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  activeRoleText: {
-    color: '#667eea',
   },
   inputGroup: {
     gap: 8,
@@ -197,22 +151,13 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#667eea',
+    color: '#dc2626',
   },
-  adminLink: {
+  backButton: {
     alignItems: 'center',
     paddingVertical: 16,
   },
-  adminLinkText: {
-    fontSize: 16,
-    color: 'white',
-    textDecorationLine: 'underline',
-  },
-  registerLink: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  registerLinkText: {
+  backButtonText: {
     fontSize: 16,
     color: 'white',
     textDecorationLine: 'underline',

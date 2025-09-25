@@ -71,6 +71,27 @@ export default function CreateRideScreen() {
   
   const mapRef = useRef<MapView>(null);
   
+  // Check if user is a driver - only drivers can create rides
+  if (user?.role !== 'driver') {
+    return (
+      <>
+        <Stack.Screen options={{ title: "Access Denied" }} />
+        <View style={styles.accessDeniedContainer}>
+          <Text style={styles.accessDeniedTitle}>Access Restricted</Text>
+          <Text style={styles.accessDeniedMessage}>
+            Only drivers can create and offer rides. Please register as a driver to access this feature.
+          </Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </>
+    );
+  }
+  
   // Get user's current location when component mounts
   useEffect(() => {
     (async () => {
@@ -569,5 +590,37 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.7,
+  },
+  accessDeniedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: '#f8f9fa',
+  },
+  accessDeniedTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  accessDeniedMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  backButton: {
+    backgroundColor: '#667eea',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -89,16 +89,16 @@ export default function HomeScreen() {
             <Marker
               key={index}
               coordinate={{
-                latitude: ride.originCoords?.latitude || 0,
-                longitude: ride.originCoords?.longitude || 0,
+                latitude: ride.origin.latitude || 0,
+                longitude: ride.origin.longitude || 0,
               }}
-              title={`To: ${ride.destination}`}
-              description={`${ride.availableSeats} seats available`}
+              title={`To: ${ride.destination.address || ride.destination.name || 'Unknown destination'}`}
+              description={`${ride.seatsAvailable} seats available`}
             >
               <View style={styles.marker}>
                 <MapPin size={24} color="#3b82f6" fill="#fff" />
                 <View style={styles.markerBadge}>
-                  <Text style={styles.markerText}>{ride.price} FCFA</Text>
+                  <Text style={styles.markerText}>{ride.priceXAF} FCFA</Text>
                 </View>
               </View>
             </Marker>
@@ -139,15 +139,17 @@ export default function HomeScreen() {
               <Text style={styles.actionText}>Find Rides</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity 
-              style={styles.actionCard}
-              onPress={() => handleQuickAction('create-ride')}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: '#e0f7fa' }]}>
-                <Plus size={20} color="#0d9488" />
-              </View>
-              <Text style={styles.actionText}>Offer Ride</Text>
-            </TouchableOpacity>
+            {isDriver && (
+              <TouchableOpacity 
+                style={styles.actionCard}
+                onPress={() => handleQuickAction('create-ride')}
+              >
+                <View style={[styles.actionIcon, { backgroundColor: '#e0f7fa' }]}>
+                  <Plus size={20} color="#0d9488" />
+                </View>
+                <Text style={styles.actionText}>Offer Ride</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -161,13 +163,13 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.activityContent}>
                   <Text style={styles.activityTitle}>
-                    {booking.origin} → {booking.destination}
+                    {booking.ride.origin.name || booking.ride.origin.address} → {booking.ride.destination.name || booking.ride.destination.address}
                   </Text>
                   <Text style={styles.activitySubtitle}>
-                    {new Date(booking.date).toLocaleDateString()} at {booking.time}
+                    {new Date(booking.ride.dateTime).toLocaleDateString()} at {new Date(booking.ride.dateTime).toLocaleTimeString()}
                   </Text>
                 </View>
-                <Text style={styles.activityPrice}>{booking.price} FCFA</Text>
+                <Text style={styles.activityPrice}>{booking.totalAmount} FCFA</Text>
               </View>
             ))
           ) : (

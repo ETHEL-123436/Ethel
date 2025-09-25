@@ -1,8 +1,8 @@
+import { mockBookings, mockRides } from '@/mocks/data';
+import { Booking, Location, Ride } from '@/types';
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect } from 'react';
-import { Ride, Booking, Location } from '@/types';
-import { mockRides, mockBookings } from '@/mocks/data';
+import { useEffect, useState } from 'react';
 
 export const [RideProvider, useRides] = createContextHook(() => {
   const [rides, setRides] = useState<Ride[]>([]);
@@ -90,7 +90,8 @@ export const [RideProvider, useRides] = createContextHook(() => {
           kycStatus: 'approved',
           rating: 4.5,
           totalRides: 10,
-          walletBalance: 15000
+          walletBalance: 15000,
+          status: 'active'
         },
         seats,
         status: 'pending',

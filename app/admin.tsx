@@ -5,7 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Platform
+  Alert
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
@@ -23,9 +23,6 @@ import {
 } from 'lucide-react-native';
 import { useAdmin } from '@/providers/admin-provider';
 import { AdminStats } from '@/types';
-
-
-const isWeb = Platform.OS === 'web';
 
 interface StatCardProps {
   title: string;
@@ -85,6 +82,8 @@ const TabButton: React.FC<TabButtonProps> = ({ title, icon, isActive, onPress, b
     </TouchableOpacity>
   );
 };
+
+const isWeb = false; // Platform.OS === 'web';
 
 const DashboardOverview: React.FC<{ stats: AdminStats }> = ({ stats }) => (
   <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -179,14 +178,14 @@ const DashboardOverview: React.FC<{ stats: AdminStats }> = ({ stats }) => (
     </View>
   </ScrollView>
 );
-
 const UsersManagement: React.FC = () => {
   const { getFilteredUsers, suspendUser, deleteUser } = useAdmin();
   const [filter, setFilter] = useState<'all' | 'drivers' | 'passengers'>('all');
   const [kycFilter, setKycFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const isWeb = false; // Platform.OS === 'web';
 
   const filteredUsers = getFilteredUsers(
-    filter === 'all' ? undefined : filter === 'drivers' ? 'driver' : 'passenger',
+    isWeb ? undefined : filter === 'drivers' ? 'driver' : 'passenger',
     kycFilter === 'all' ? undefined : kycFilter
   );
 
@@ -319,13 +318,19 @@ const KYCManagement: React.FC = () => {
             <View style={styles.kycActions}>
               <TouchableOpacity
                 style={[styles.kycButton, styles.approveButton]}
-                onPress={() => updateKYCDocument(doc.id, 'approved')}
+                onPress={() => {
+                  updateKYCDocument(doc.id, 'approved');
+                  Alert.alert('Success', 'KYC document approved successfully!');
+                }}
               >
                 <Text style={styles.kycButtonText}>Approve</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.kycButton, styles.rejectButton]}
-                onPress={() => updateKYCDocument(doc.id, 'rejected', 'Document quality insufficient')}
+                onPress={() => {
+                  updateKYCDocument(doc.id, 'rejected', 'Document quality insufficient');
+                  Alert.alert('Success', 'KYC document rejected successfully!');
+                }}
               >
                 <Text style={styles.kycButtonText}>Reject</Text>
               </TouchableOpacity>

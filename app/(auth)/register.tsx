@@ -33,7 +33,7 @@ export default function RegisterScreen() {
 
     try {
       await register(formData.name, formData.email, formData.phone, formData.password, role || 'passenger');
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/home");
     } catch {
       // Handle error silently
     }

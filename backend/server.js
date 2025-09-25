@@ -8,6 +8,7 @@ const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const rideRoutes = require('./routes/rideRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Initialize Express app
 const app = express();
@@ -25,12 +26,13 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // API Routes
-app.use('/api/users', userRoutes);
-app.use('/api/rides', rideRoutes);
-app.use('/api/bookings', bookingRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/rides', rideRoutes);
+app.use('/api/v1/bookings', bookingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/v1/health', (req, res) => {
   res.status(200).json({ status: 'API is running', timestamp: new Date() });
 });
 
@@ -42,7 +44,37 @@ app.use((req, res) => {
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+  
+  // Handle Mongoose validation errors
+  if (err.name === 'ValidationError') {
+    const messages = Object.values(err.errors).map(val => val.message);
+    return res.status(400).json({
+      success: false,
+      error: messages
+    });
+  }
+
+  // Handle JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({
+      success: false,
+      error: 'Not authorized, token failed'
+    });
+  }
+
+  // Handle JWT expired error
+  if (err.name === 'TokenExpiredError') {
+    return res.status(401).json({
+      success: false,
+      error: 'Session expired, please log in again'
+    });
+  }
+
+  // Default to 500 server error
+  res.status(err.statusCode || 500).json({
+    success: false,
+    error: err.message || 'Server Error'
+  });
 });
 
 const PORT = process.env.PORT || 5000;

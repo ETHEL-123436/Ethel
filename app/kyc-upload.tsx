@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image } from "react-native";
 import { Stack, router } from "expo-router";
 import { Upload, Camera, FileText, CheckCircle, Clock, XCircle } from "lucide-react-native";
@@ -40,6 +40,16 @@ export default function KYCUploadScreen() {
     }
   ]);
 
+  // Update documents when user data is available
+  React.useEffect(() => {
+    if (user) {
+      setDocuments(prev => prev.map(doc => ({
+        ...doc,
+        required: doc.type === 'id_card' ? true : user.role === 'driver'
+      })));
+    }
+  }, [user]);
+
   const pickImage = async (documentType: KYCDocument['type']) => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -63,6 +73,7 @@ export default function KYCUploadScreen() {
         ));
       }
     } catch (error) {
+      console.error('Error picking image:', error);
       Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
@@ -89,6 +100,7 @@ export default function KYCUploadScreen() {
         ));
       }
     } catch (error) {
+      console.error('Error taking photo:', error);
       Alert.alert('Error', 'Failed to take photo. Please try again.');
     }
   };
@@ -129,6 +141,7 @@ export default function KYCUploadScreen() {
         ]
       );
     } catch (error) {
+      console.error('Error submitting documents:', error);
       Alert.alert('Error', 'Failed to submit documents. Please try again.');
     }
   };

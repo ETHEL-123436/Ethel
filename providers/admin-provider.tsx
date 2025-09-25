@@ -1,115 +1,457 @@
-import createContextHook from '@nkzw/create-context-hook';
-import { useState, useCallback, useMemo } from 'react';
-import { 
-  User, 
-  Dispute, 
-  AdminStats, 
-  RefundRequest, 
-  KYCDocument, 
-  Payment,
-  Booking,
-  Ride
-} from '@/types';
+import { API_BASE_URL, KYC_STATUS, USER_ROLES, USER_STATUS } from '@/config/constants';
 import {
-  mockAllUsers,
-  mockDisputes,
-  mockAdminStats,
-  mockRefundRequests,
-  mockKYCDocuments,
-  mockPayments,
-  mockBookings,
-  mockRides
-} from '@/mocks/data';
+  AdminStats,
+  Booking,
+  Dispute,
+  KYCDocument,
+  Payment,
+  RefundRequest,
+  Ride,
+  User
+} from '@/types';
+import { ActivityLog } from '@/types/admin';
+import createContextHook from '@nkzw/create-context-hook';
+import axios, { AxiosError, AxiosResponse } from 'axios';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useAuth } from './auth-provider';
+
+// Type for API response data structure
+interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  success: boolean;
+}
+
+// Type for paginated response
+interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 export const [AdminProvider, useAdmin] = createContextHook(() => {
-  const [users, setUsers] = useState<User[]>(mockAllUsers);
-  const [disputes, setDisputes] = useState<Dispute[]>(mockDisputes);
-  const [stats] = useState<AdminStats>(mockAdminStats);
-  const [refundRequests, setRefundRequests] = useState<RefundRequest[]>(mockRefundRequests);
-  const [kycDocuments, setKycDocuments] = useState<KYCDocument[]>(mockKYCDocuments);
-  const [payments] = useState<Payment[]>(mockPayments);
-  const [bookings, setBookings] = useState<Booking[]>(mockBookings);
-  const [rides] = useState<Ride[]>(mockRides);
+  const { user } = useAuth();
+  const [users, setUsers] = useState<User[]>([]);
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [refundRequests, setRefundRequests] = useState<RefundRequest[]>([]);
+  const [kycDocuments, setKycDocuments] = useState<KYCDocument[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [rides, setRides] = useState<Ride[]>([]);
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>('dashboard');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const updateUserStatus = useCallback((userId: string, kycStatus: 'pending' | 'approved' | 'rejected') => {
-    setUsers(prev => prev.map(user => 
-      user.id === userId ? { ...user, kycStatus } : user
-    ));
-  }, []);
-
-  const updateKYCDocument = useCallback((docId: string, status: 'pending' | 'approved' | 'rejected', reviewNotes?: string) => {
-    setKycDocuments(prev => prev.map(doc => 
-      doc.id === docId ? { ...doc, status, reviewNotes } : doc
-    ));
-    
-    const doc = kycDocuments.find(d => d.id === docId);
-    if (doc) {
-      updateUserStatus(doc.userId, status);
-    }
-  }, [kycDocuments, updateUserStatus]);
-
-  const updateDispute = useCallback((disputeId: string, status: Dispute['status'], resolution?: string, assignedTo?: string) => {
-    setDisputes(prev => prev.map(dispute => 
-      dispute.id === disputeId 
-        ? { ...dispute, status, resolution, assignedTo, updatedAt: new Date().toISOString() }
-        : dispute
-    ));
-  }, []);
-
-  const processRefund = useCallback((refundId: string, status: RefundRequest['status'], processedBy?: string) => {
-    setRefundRequests(prev => prev.map(refund => 
-      refund.id === refundId 
-        ? { 
-            ...refund, 
-            status, 
-            processedBy, 
-            processedAt: status === 'processed' ? new Date().toISOString() : undefined 
-          }
-        : refund
-    ));
-
-    if (status === 'processed') {
-      const refund = refundRequests.find(r => r.id === refundId);
-      if (refund) {
-        setBookings(prev => prev.map(booking => 
-          booking.id === refund.bookingId 
-            ? { ...booking, paymentStatus: 'refunded' }
-            : booking
-        ));
+  // Set up axios instance with auth token
+  const api = useMemo(() => {
+    const instance = axios.create({
+      baseURL: API_BASE_URL,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': user?.token ? `Bearer ${user.token}` : ''
       }
+    });
+
+    // Add request interceptor for auth
+    instance.interceptors.request.use(
+      (config) => {
+        if (user?.token) {
+          config.headers.Authorization = `Bearer ${user.token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    // Add response interceptor for error handling
+    instance.interceptors.response.use(
+      (response: AxiosResponse) => response,
+      (error: AxiosError) => {
+        if (error.response?.status === 401) {
+          // Handle unauthorized access
+          console.error('Authentication error:', error);
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return instance;
+  }, [user?.token]);
+
+  // Fetch dashboard stats
+  const fetchDashboardStats = useCallback(async (): Promise<AdminStats> => {
+    try {
+      setIsLoading(true);
+      const response = await api.get<ApiResponse<AdminStats>>('/api/admin/dashboard-stats');
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch dashboard stats');
+      }
+      const statsData = response.data.data;
+      setStats(statsData);
+      return statsData;
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to load dashboard stats';
+      console.error('Error fetching dashboard stats:', err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-  }, [refundRequests]);
+  }, [api]);
 
-  const suspendUser = useCallback((userId: string) => {
-    console.log(`Suspending user: ${userId}`);
-  }, []);
+  // Fetch all users with pagination support
+  const fetchUsers = useCallback(async (params: Record<string, any> = {}): Promise<PaginatedResponse<User>> => {
+    try {
+      setIsLoading(true);
+      const response = await api.get<ApiResponse<PaginatedResponse<User>>>('/api/v1/admin/users', { params });
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch users');
+      }
+      const usersData = response.data.data;
+      setUsers(usersData.data);
+      return usersData;
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to load users';
+      console.error('Error fetching users:', err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
 
-  const deleteUser = useCallback((userId: string) => {
-    setUsers(prev => prev.filter(user => user.id !== userId));
-  }, []);
+  // Fetch activity logs with pagination and filtering
+  const fetchActivityLogs = useCallback(async (params: Record<string, any> = {}): Promise<PaginatedResponse<ActivityLog>> => {
+    try {
+      setIsLoading(true);
+      const response = await api.get<ApiResponse<PaginatedResponse<ActivityLog>>>('/api/v1/admin/activity-logs', { params });
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch activity logs');
+      }
+      const logsData = response.data.data;
+      setActivityLogs(logsData.data);
+      return logsData;
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to load activity logs';
+      console.error('Error fetching activity logs:', err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
 
-  const getFilteredUsers = useCallback((role?: 'driver' | 'passenger', kycStatus?: string) => {
+  // Update user role
+  const updateUserRole = useCallback(async (
+    userId: string, 
+    role: typeof USER_ROLES[keyof typeof USER_ROLES]
+  ): Promise<User> => {
+    try {
+      setIsLoading(true);
+      const response = await api.put<ApiResponse<User>>(
+        `/api/v1/admin/users/${userId}/role`,
+        { role }
+      );
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to update user role');
+      }
+      
+      const updatedUser = response.data.data;
+      
+      // Update local state
+      setUsers(prev => 
+        prev.map(user => 
+          user.id === userId ? { ...user, role } : user
+        )
+      );
+      
+      return updatedUser;
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to update user role';
+      console.error('Error updating user role:', err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
+
+  // Update user status
+  const updateUserStatus = useCallback(async (
+    userId: string, 
+    status: typeof USER_STATUS[keyof typeof USER_STATUS]
+  ): Promise<User> => {
+    try {
+      setIsLoading(true);
+      const response = await api.put<ApiResponse<User>>(
+        `/api/v1/admin/users/${userId}/status`,
+        { status }
+      );
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to update user status');
+      }
+      
+      const updatedUser = response.data.data;
+      
+      // Update local state
+      setUsers(prev => 
+        prev.map(user => 
+          user.id === userId ? { ...user, status } : user
+        )
+      );
+      
+      return updatedUser;
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to update user status';
+      console.error('Error updating user status:', err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
+
+  // Update KYC document status
+  const updateKYCDocument = useCallback(async (
+    docId: string, 
+    status: typeof KYC_STATUS[keyof typeof KYC_STATUS], 
+    reviewNotes?: string
+  ): Promise<KYCDocument> => {
+    try {
+      setIsLoading(true);
+      const response = await api.put<ApiResponse<KYCDocument>>(
+        `/api/v1/admin/kyc/${docId}`,
+        { status, reviewNotes }
+      );
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to update KYC document');
+      }
+      
+      const updatedDoc = response.data.data;
+      
+      // Update local state
+      setKycDocuments(prev => 
+        prev.map(doc => 
+          doc.id === docId ? { ...doc, status, reviewNotes } : doc
+        )
+      );
+      
+      return updatedDoc;
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to update KYC document';
+      console.error('Error updating KYC document:', err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
+
+  // Fetch pending refunds with pagination support
+  const fetchPendingRefunds = useCallback(async (params: Record<string, any> = {}): Promise<PaginatedResponse<RefundRequest>> => {
+    try {
+      setIsLoading(true);
+      const response = await api.get<ApiResponse<PaginatedResponse<RefundRequest>>>(
+        '/api/v1/admin/refund-requests',
+        { params: { status: 'pending', ...params } }
+      );
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch pending refunds');
+      }
+      
+      const refundsData = response.data.data;
+      setRefundRequests(refundsData.data);
+      return refundsData;
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to load pending refunds';
+      console.error('Error fetching pending refunds:', err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
+
+  // Initialize admin data
+  useEffect(() => {
+    const initializeAdminData = async () => {
+      if (user?.role === 'admin') {
+        try {
+          await Promise.all([
+            fetchDashboardStats(),
+            fetchUsers({ page: 1, limit: 10 }),
+            fetchActivityLogs({ page: 1, limit: 10 }),
+            fetchPendingRefunds({ page: 1, limit: 10 })
+          ]);
+        } catch (error) {
+          console.error('Error initializing admin data:', error);
+        }
+      }
+    };
+
+    initializeAdminData();
+  }, [user, fetchDashboardStats, fetchUsers, fetchActivityLogs, fetchPendingRefunds]);
+
+  // Process refund request
+  const processRefund = useCallback(async (refundId: string, action: 'approve' | 'reject', reason?: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const response = await api.put<ApiResponse<RefundRequest>>(`/api/v1/admin/refunds/${refundId}`, {
+        action,
+        reason
+      });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to process refund');
+      }
+      
+      // Update local state
+      setRefundRequests(prev => 
+        prev.map(req => 
+          req.id === refundId ? { ...req, status: action === 'approve' ? 'approved' : 'rejected' } : req
+        )
+      );
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to process refund';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
+
+  // Suspend a user
+  const suspendUser = useCallback(async (userId: string, reason: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const response = await api.put<ApiResponse<User>>(`/api/v1/admin/users/${userId}/suspend`, { reason });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to suspend user');
+      }
+      
+      // Update local state
+      setUsers(prev => 
+        prev.map(user => 
+          user.id === userId ? { ...user, status: 'suspended' } : user
+        )
+      );
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to suspend user';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
+
+  // Delete a user
+  const deleteUser = useCallback(async (userId: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const response = await api.delete<ApiResponse<{ id: string }>>(`/api/v1/admin/users/${userId}`);
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to delete user');
+      }
+      
+      // Update local state
+      setUsers(prev => prev.filter(user => user.id !== userId));
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to delete user';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
+
+  // Update dispute status
+  const updateDispute = useCallback(async (disputeId: string, status: 'open' | 'investigating' | 'resolved' | 'closed', resolution?: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const response = await api.put<ApiResponse<Dispute>>(`/api/v1/admin/disputes/${disputeId}`, {
+        status,
+        resolution
+      });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to update dispute');
+      }
+      
+      // Update local state
+      setDisputes(prev => 
+        prev.map(dispute => 
+          dispute.id === disputeId 
+            ? { 
+                ...dispute, 
+                status,
+                ...(resolution && { resolution }),
+                updatedAt: new Date().toISOString()
+              } 
+            : dispute
+        )
+      );
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      const errorMessage = err.response?.data?.message || 'Failed to update dispute';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
+
+  // Get filtered users
+  const getFilteredUsers = useCallback((filters: { status?: string; role?: string; search?: string } = {}) => {
     return users.filter(user => {
-      if (role && user.role !== role) return false;
-      if (kycStatus && user.kycStatus !== kycStatus) return false;
-      return true;
+      const matchesStatus = !filters.status || user.status === filters.status;
+      const matchesRole = !filters.role || user.role === filters.role;
+      const matchesSearch = !filters.search || 
+        user.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        user.email.toLowerCase().includes(filters.search.toLowerCase());
+      
+      return matchesStatus && matchesRole && matchesSearch;
     });
   }, [users]);
 
+  // Get pending KYC documents
   const getPendingKYC = useCallback(() => {
     return kycDocuments.filter(doc => doc.status === 'pending');
   }, [kycDocuments]);
 
+  // Get open disputes
   const getOpenDisputes = useCallback(() => {
     return disputes.filter(dispute => dispute.status === 'open' || dispute.status === 'investigating');
   }, [disputes]);
 
+  // Get pending refunds
   const getPendingRefunds = useCallback(() => {
-    return refundRequests.filter(refund => refund.status === 'pending');
+    return refundRequests.filter(request => request.status === 'pending');
   }, [refundRequests]);
 
-  return useMemo(() => ({
+  return {
+    // State
     users,
     disputes,
     stats,
@@ -118,37 +460,27 @@ export const [AdminProvider, useAdmin] = createContextHook(() => {
     payments,
     bookings,
     rides,
+    activityLogs,
     selectedTab,
+    isLoading,
+    error,
+    
+    // Actions
     setSelectedTab,
     updateUserStatus,
     updateKYCDocument,
-    updateDispute,
+    updateUserRole,
+    fetchDashboardStats,
+    fetchUsers,
+    fetchActivityLogs,
+    fetchPendingRefunds,
     processRefund,
     suspendUser,
     deleteUser,
-    getFilteredUsers,
-    getPendingKYC,
-    getOpenDisputes,
-    getPendingRefunds
-  }), [
-    users,
-    disputes,
-    stats,
-    refundRequests,
-    kycDocuments,
-    payments,
-    bookings,
-    rides,
-    selectedTab,
-    updateUserStatus,
-    updateKYCDocument,
     updateDispute,
-    processRefund,
-    suspendUser,
-    deleteUser,
     getFilteredUsers,
     getPendingKYC,
     getOpenDisputes,
-    getPendingRefunds
-  ]);
+    getPendingRefunds,
+  };
 });
