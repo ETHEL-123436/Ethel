@@ -1,28 +1,32 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { 
-  Users, 
-  AlertTriangle, 
-  DollarSign, 
-  TrendingUp,
-  Car,
-  Shield,
-  RefreshCw,
-  BarChart3,
-  UserCheck,
-  AlertCircle,
-  CreditCard
-} from 'lucide-react-native';
 import { useAdmin } from '@/providers/admin-provider';
 import { AdminStats } from '@/types';
+import {
+  AlertCircle,
+  AlertTriangle,
+  BarChart3,
+  Car,
+  Check,
+  CreditCard,
+  DollarSign,
+  RefreshCw,
+  Search,
+  Shield,
+  Trash2,
+  TrendingUp,
+  UserCheck,
+  Users,
+  X
+} from 'lucide-react-native';
+import React, { useState } from 'react';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface StatCardProps {
   title: string;
@@ -37,7 +41,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, growth }
     <View style={[styles.statCard, { borderLeftColor: color }]}>
       <View style={styles.statHeader}>
         <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
-          <Text>{icon}</Text>
+          {icon}
         </View>
         <View style={styles.statContent}>
           <Text style={styles.statValue}>{value}</Text>
@@ -71,7 +75,7 @@ const TabButton: React.FC<TabButtonProps> = ({ title, icon, isActive, onPress, b
       onPress={onPress}
     >
       <View style={styles.tabContent}>
-        <Text>{icon}</Text>
+        {icon}
         <Text style={[styles.tabText, isActive && styles.activeTabText]}>{title}</Text>
         {badge !== undefined && badge > 0 && (
           <View style={styles.badge}>
@@ -85,109 +89,121 @@ const TabButton: React.FC<TabButtonProps> = ({ title, icon, isActive, onPress, b
 
 const isWeb = false; // Platform.OS === 'web';
 
-const DashboardOverview: React.FC<{ stats: AdminStats }> = ({ stats }) => (
-  <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-    <Text style={styles.sectionTitle}>Overview</Text>
-    
-    <View style={styles.statsGrid}>
-      <StatCard
-        title="Total Users"
-        value={stats.totalUsers.toLocaleString()}
-        icon={<Users size={24} color="#3B82F6" />}
-        color="#3B82F6"
-        growth={stats.monthlyGrowth.users}
-      />
-      <StatCard
-        title="Active Rides"
-        value={stats.activeRides}
-        icon={<Car size={24} color="#10B981" />}
-        color="#10B981"
-        growth={stats.monthlyGrowth.rides}
-      />
-      <StatCard
-        title="Total Revenue"
-        value={`${(stats.totalRevenue / 1000000).toFixed(1)}M XAF`}
-        icon={<DollarSign size={24} color="#F59E0B" />}
-        color="#F59E0B"
-        growth={stats.monthlyGrowth.revenue}
-      />
-      <StatCard
-        title="Pending KYC"
-        value={stats.pendingKYC}
-        icon={<Shield size={24} color="#EF4444" />}
-        color="#EF4444"
-      />
-    </View>
+const DashboardOverview: React.FC<{ stats: AdminStats | null }> = ({ stats }) => {
+  if (!stats) {
+    return (
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.sectionTitle}>Loading dashboard data...</Text>
+      </ScrollView>
+    );
+  }
 
-    <View style={styles.quickActions}>
-      <Text style={styles.sectionTitle}>Quick Actions</Text>
-      <View style={styles.actionGrid}>
-        <TouchableOpacity style={styles.actionCard}>
-          <UserCheck size={24} color="#3B82F6" />
-          <Text style={styles.actionText}>Review KYC</Text>
-          <Text style={styles.actionSubtext}>{stats.pendingKYC} pending</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionCard}>
-          <AlertCircle size={24} color="#F59E0B" />
-          <Text style={styles.actionText}>Handle Disputes</Text>
-          <Text style={styles.actionSubtext}>{stats.openDisputes} open</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionCard}>
-          <CreditCard size={24} color="#10B981" />
-          <Text style={styles.actionText}>Process Refunds</Text>
-          <Text style={styles.actionSubtext}>View pending</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionCard}>
-          <BarChart3 size={24} color="#8B5CF6" />
-          <Text style={styles.actionText}>View Analytics</Text>
-          <Text style={styles.actionSubtext}>Detailed reports</Text>
-        </TouchableOpacity>
+  return (
+    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <Text style={styles.sectionTitle}>Overview</Text>
+
+      <View style={styles.statsGrid}>
+        <StatCard
+          title="Total Users"
+          value={stats.totalUsers.toLocaleString()}
+          icon={<Users size={24} color="#3B82F6" />}
+          color="#3B82F6"
+          growth={stats.monthlyGrowth.users}
+        />
+        <StatCard
+          title="Active Rides"
+          value={stats.activeRides}
+          icon={<Car size={24} color="#10B981" />}
+          color="#10B981"
+          growth={stats.monthlyGrowth.rides}
+        />
+        <StatCard
+          title="Total Revenue"
+          value={`${(stats.totalRevenue / 1000000).toFixed(1)}M XAF`}
+          icon={<DollarSign size={24} color="#F59E0B" />}
+          color="#F59E0B"
+          growth={stats.monthlyGrowth.revenue}
+        />
+        <StatCard
+          title="Pending KYC"
+          value={stats.pendingKYC}
+          icon={<Shield size={24} color="#EF4444" />}
+          color="#EF4444"
+        />
       </View>
-    </View>
 
-    <View style={styles.mapContainer}>
-      <Text style={styles.sectionTitle}>Live Rides Map</Text>
-      <View style={styles.mapWrapper}>
-        {isWeb ? (
-          <View style={styles.webMapPlaceholder}>
-            <View style={styles.mapOverlay}>
-              <Text style={styles.mapTitle}>Cameroon Ride Activity</Text>
-              <View style={styles.cityStats}>
-                <View style={styles.cityItem}>
-                  <View style={[styles.cityDot, { backgroundColor: '#10B981' }]} />
-                  <Text style={styles.cityName}>Yaoundé - 8 active rides</Text>
-                </View>
-                <View style={styles.cityItem}>
-                  <View style={[styles.cityDot, { backgroundColor: '#3B82F6' }]} />
-                  <Text style={styles.cityName}>Douala - 12 active rides</Text>
-                </View>
-                <View style={styles.cityItem}>
-                  <View style={[styles.cityDot, { backgroundColor: '#F59E0B' }]} />
-                  <Text style={styles.cityName}>Bamenda - 3 active rides</Text>
+      <View style={styles.quickActions}>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.actionGrid}>
+          <TouchableOpacity style={styles.actionCard}>
+            <UserCheck size={24} color="#3B82F6" />
+            <Text style={styles.actionText}>Review KYC</Text>
+            <Text style={styles.actionSubtext}>{stats.pendingKYC} pending</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionCard}>
+            <AlertCircle size={24} color="#F59E0B" />
+            <Text style={styles.actionText}>Handle Disputes</Text>
+            <Text style={styles.actionSubtext}>{stats.openDisputes} open</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionCard}>
+            <CreditCard size={24} color="#10B981" />
+            <Text style={styles.actionText}>Process Refunds</Text>
+            <Text style={styles.actionSubtext}>View pending</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionCard}>
+            <BarChart3 size={24} color="#8B5CF6" />
+            <Text style={styles.actionText}>View Analytics</Text>
+            <Text style={styles.actionSubtext}>Detailed reports</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.mapContainer}>
+        <Text style={styles.sectionTitle}>Live Rides Map</Text>
+        <View style={styles.mapWrapper}>
+          {isWeb ? (
+            <View style={styles.webMapPlaceholder}>
+              <View style={styles.mapOverlay}>
+                <Text style={styles.mapTitle}>Cameroon Ride Activity</Text>
+                <View style={styles.cityStats}>
+                  <View style={styles.cityItem}>
+                    <View style={[styles.cityDot, { backgroundColor: '#10B981' }]} />
+                    <Text style={styles.cityName}>Yaoundé - 8 active rides</Text>
+                  </View>
+                  <View style={styles.cityItem}>
+                    <View style={[styles.cityDot, { backgroundColor: '#3B82F6' }]} />
+                    <Text style={styles.cityName}>Douala - 12 active rides</Text>
+                  </View>
+                  <View style={styles.cityItem}>
+                    <View style={[styles.cityDot, { backgroundColor: '#F59E0B' }]} />
+                    <Text style={styles.cityName}>Bamenda - 3 active rides</Text>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
-        ) : (
-          <View style={styles.nativeMapPlaceholder}>
-            <Text style={styles.mapPlaceholderText}>Map view available on mobile devices</Text>
-            <Text style={styles.mapPlaceholderSubtext}>Install the mobile app to view live ride tracking</Text>
-          </View>
-        )}
+          ) : (
+            <View style={styles.nativeMapPlaceholder}>
+              <Text style={styles.mapPlaceholderText}>Map view available on mobile devices</Text>
+              <Text style={styles.mapPlaceholderSubtext}>Install the mobile app to view live ride tracking</Text>
+            </View>
+          )}
+        </View>
       </View>
-    </View>
-  </ScrollView>
-);
+    </ScrollView>
+  );
+};
 const UsersManagement: React.FC = () => {
   const { getFilteredUsers, suspendUser, deleteUser } = useAdmin();
   const [filter, setFilter] = useState<'all' | 'drivers' | 'passengers'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
   const [kycFilter, setKycFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const isWeb = false; // Platform.OS === 'web';
 
-  const filteredUsers = getFilteredUsers(
-    isWeb ? undefined : filter === 'drivers' ? 'driver' : 'passenger',
-    kycFilter === 'all' ? undefined : kycFilter
-  );
+  const filteredUsers = getFilteredUsers({
+    role: isWeb ? undefined : filter === 'drivers' ? 'driver' : filter === 'passengers' ? 'passenger' : undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter,
+    kycStatus: kycFilter === 'all' ? undefined : kycFilter
+  });
 
   return (
     <ScrollView style={styles.content}>
@@ -204,6 +220,23 @@ const UsersManagement: React.FC = () => {
                 onPress={() => setFilter(f as any)}
               >
                 <Text style={[styles.filterButtonText, filter === f && styles.activeFilterText]}>
+                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+        
+        <View style={styles.filterGroup}>
+          <Text style={styles.filterLabel}>Status:</Text>
+          <View style={styles.filterButtons}>
+            {['all', 'active', 'suspended'].map((f) => (
+              <TouchableOpacity
+                key={f}
+                style={[styles.filterButton, statusFilter === f && styles.activeFilter]}
+                onPress={() => setStatusFilter(f as any)}
+              >
+                <Text style={[styles.filterButtonText, statusFilter === f && styles.activeFilterText]}>
                   {f.charAt(0).toUpperCase() + f.slice(1)}
                 </Text>
               </TouchableOpacity>
@@ -246,15 +279,15 @@ const UsersManagement: React.FC = () => {
               <Text style={styles.userPhone}>{user.phone}</Text>
               
               <View style={styles.userStats}>
-                <View style={styles.statItem}>
+                <View style={styles.userStatItem}>
                   <Text style={styles.statLabel}>Rating</Text>
                   <Text style={styles.statValue}>{user.rating.toFixed(1)}</Text>
                 </View>
-                <View style={styles.statItem}>
+                <View style={styles.userStatItem}>
                   <Text style={styles.statLabel}>Rides</Text>
                   <Text style={styles.statValue}>{user.totalRides}</Text>
                 </View>
-                <View style={styles.statItem}>
+                <View style={styles.userStatItem}>
                   <Text style={styles.statLabel}>Wallet</Text>
                   <Text style={styles.statValue}>{user.walletBalance.toLocaleString()} XAF</Text>
                 </View>
@@ -277,14 +310,16 @@ const UsersManagement: React.FC = () => {
             <View style={styles.userActions}>
               <TouchableOpacity
                 style={[styles.actionButton, styles.suspendButton]}
-                onPress={() => suspendUser(user.id)}
+                onPress={() => suspendUser(user.id, 'Suspended by admin')}              
               >
+                <AlertTriangle size={14} color="#FFFFFF" />
                 <Text style={styles.actionButtonText}>Suspend</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionButton, styles.deleteButton]}
-                onPress={() => deleteUser(user.id)}
+                onPress={() => deleteUser(user.id)}              
               >
+                <Trash2 size={14} color="#FFFFFF" />
                 <Text style={styles.actionButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
@@ -320,18 +355,20 @@ const KYCManagement: React.FC = () => {
                 style={[styles.kycButton, styles.approveButton]}
                 onPress={() => {
                   updateKYCDocument(doc.id, 'approved');
-                  Alert.alert('Success', 'KYC document approved successfully!');
-                }}
+                  Alert.alert('Success', 'KYC document approved successfully!');                
+                }}              
               >
+                <Check size={16} color="#FFFFFF" />
                 <Text style={styles.kycButtonText}>Approve</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.kycButton, styles.rejectButton]}
                 onPress={() => {
                   updateKYCDocument(doc.id, 'rejected', 'Document quality insufficient');
-                  Alert.alert('Success', 'KYC document rejected successfully!');
+                  Alert.alert('Success', 'KYC document rejected successfully!');                
                 }}
               >
+                <X size={16} color="#FFFFFF" />
                 <Text style={styles.kycButtonText}>Reject</Text>
               </TouchableOpacity>
             </View>
@@ -373,14 +410,16 @@ const DisputeManagement: React.FC = () => {
             <View style={styles.disputeActions}>
               <TouchableOpacity
                 style={[styles.disputeButton, styles.investigateButton]}
-                onPress={() => updateDispute(dispute.id, 'investigating', undefined, 'admin1')}
+                onPress={() => updateDispute(dispute.id, 'investigating', undefined)}
               >
+                <Search size={14} color="#FFFFFF" />
                 <Text style={styles.disputeButtonText}>Investigate</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.disputeButton, styles.resolveButton]}
                 onPress={() => updateDispute(dispute.id, 'resolved', 'Issue resolved through mediation')}
               >
+                <Check size={14} color="#FFFFFF" />
                 <Text style={styles.disputeButtonText}>Resolve</Text>
               </TouchableOpacity>
             </View>
@@ -415,21 +454,17 @@ const RefundManagement: React.FC = () => {
             <View style={styles.refundActions}>
               <TouchableOpacity
                 style={[styles.refundButton, styles.approveRefundButton]}
-                onPress={() => processRefund(refund.id, 'approved', 'admin1')}
+                onPress={() => processRefund(refund.id, 'approve', 'admin1')}
               >
+                <Check size={14} color="#FFFFFF" />
                 <Text style={styles.refundButtonText}>Approve</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.refundButton, styles.rejectRefundButton]}
-                onPress={() => processRefund(refund.id, 'rejected', 'admin1')}
+                onPress={() => processRefund(refund.id, 'reject', 'admin1')}
               >
+                <X size={14} color="#FFFFFF" />
                 <Text style={styles.refundButtonText}>Reject</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.refundButton, styles.processRefundButton]}
-                onPress={() => processRefund(refund.id, 'processed', 'admin1')}
-              >
-                <Text style={styles.refundButtonText}>Process</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -441,23 +476,36 @@ const RefundManagement: React.FC = () => {
 
 export default function AdminDashboard() {
   const insets = useSafeAreaInsets();
-  const { 
+  const {
     stats, 
     selectedTab, 
     setSelectedTab, 
     getPendingKYC, 
     getOpenDisputes, 
-    getPendingRefunds 
+    getPendingRefunds,
+    refreshAdminData,
+    isLoading
   } = useAdmin();
 
   const pendingKYC = getPendingKYC();
   const openDisputes = getOpenDisputes();
   const pendingRefunds = getPendingRefunds();
 
+  const handleRefresh = async () => {
+    await refreshAdminData();
+  };
+
+  const handleTabPress = (tabName: string) => {
+    setSelectedTab(tabName);
+    // Refresh data when switching to users tab to ensure we have the latest user list
+    if (tabName === 'users') {
+      refreshAdminData();
+    }
+  };
+
   const renderContent = () => {
     switch (selectedTab) {
-      case 'dashboard':
-        return <DashboardOverview stats={stats} />;
+      case 'dashboard':        return <DashboardOverview stats={stats} />;
       case 'users':
         return <UsersManagement />;
       case 'kyc':
@@ -475,8 +523,8 @@ export default function AdminDashboard() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Admin Dashboard</Text>
-        <TouchableOpacity style={styles.refreshButton}>
-          <RefreshCw size={20} color="#6B7280" />
+        <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh} disabled={isLoading}>
+          <RefreshCw size={20} color={isLoading ? "#9ca3af" : "#6B7280"} />
         </TouchableOpacity>
       </View>
 
@@ -486,33 +534,33 @@ export default function AdminDashboard() {
             title="Dashboard"
             icon={<BarChart3 size={20} color={selectedTab === 'dashboard' ? '#3B82F6' : '#6B7280'} />}
             isActive={selectedTab === 'dashboard'}
-            onPress={() => setSelectedTab('dashboard')}
+            onPress={() => handleTabPress('dashboard')}
           />
           <TabButton
             title="Users"
             icon={<Users size={20} color={selectedTab === 'users' ? '#3B82F6' : '#6B7280'} />}
             isActive={selectedTab === 'users'}
-            onPress={() => setSelectedTab('users')}
+            onPress={() => handleTabPress('users')}
           />
           <TabButton
             title="KYC Review"
             icon={<Shield size={20} color={selectedTab === 'kyc' ? '#3B82F6' : '#6B7280'} />}
             isActive={selectedTab === 'kyc'}
-            onPress={() => setSelectedTab('kyc')}
+            onPress={() => handleTabPress('kyc')}
             badge={pendingKYC.length}
           />
           <TabButton
             title="Disputes"
             icon={<AlertTriangle size={20} color={selectedTab === 'disputes' ? '#3B82F6' : '#6B7280'} />}
             isActive={selectedTab === 'disputes'}
-            onPress={() => setSelectedTab('disputes')}
+            onPress={() => handleTabPress('disputes')}
             badge={openDisputes.length}
           />
           <TabButton
             title="Refunds"
             icon={<CreditCard size={20} color={selectedTab === 'refunds' ? '#3B82F6' : '#6B7280'} />}
             isActive={selectedTab === 'refunds'}
-            onPress={() => setSelectedTab('refunds')}
+            onPress={() => handleTabPress('refunds')}
             badge={pendingRefunds.length}
           />
         </ScrollView>
@@ -533,32 +581,44 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 18,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  headerTitle: {
-    fontSize: 24,
+  headerTitle: {    
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#111827',
   },
   refreshButton: {
-    padding: 8,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
   },
   tabContainer: {
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
   tabButton: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    marginHorizontal: 4,
+    marginHorizontal: 6,
+    borderRadius: 8,
+    backgroundColor: 'transparent',
   },
-  activeTab: {
-    borderBottomWidth: 2,
+  activeTab: {    
+    borderBottomWidth: 3,
     borderBottomColor: '#3B82F6',
+    backgroundColor: '#EFF6FF',
   },
   tabContent: {
     flexDirection: 'row',
@@ -567,17 +627,16 @@ const styles = StyleSheet.create({
   },
   tabText: {
     marginLeft: 8,
-    fontSize: 14,
+    fontSize: 15,
     color: '#6B7280',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   activeTabText: {
     color: '#3B82F6',
+    fontWeight: '700',
   },
   badge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
+    marginLeft: 8,
     backgroundColor: '#EF4444',
     borderRadius: 10,
     minWidth: 20,
@@ -603,13 +662,13 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 24,
+    marginBottom: 24,    
     gap: 12,
   },
   statCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
+    padding: 16,    
     borderLeftWidth: 4,
     flex: 1,
     minWidth: '48%',
@@ -628,7 +687,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center',    
     marginRight: 12,
   },
   statContent: {
@@ -641,7 +700,7 @@ const styles = StyleSheet.create({
   },
   statTitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#6B7280',    
     marginTop: 4,
   },
   growthContainer: {
@@ -667,7 +726,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    flex: 1,
+    flex: 1,    
     minWidth: '48%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -678,7 +737,7 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: '#111827',    
     marginTop: 8,
     textAlign: 'center',
   },
@@ -746,13 +805,13 @@ const styles = StyleSheet.create({
   mapPlaceholderText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
+    color: '#374151',    
     textAlign: 'center',
   },
   mapPlaceholderSubtext: {
     fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
+    color: '#6B7280',    
+    textAlign: 'center',    
     marginTop: 8,
   },
   filterContainer: {
@@ -767,7 +826,7 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: '#374151',    
     marginBottom: 8,
   },
   filterButtons: {
@@ -789,7 +848,7 @@ const styles = StyleSheet.create({
   },
   filterButtonText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#6B7280',    
     fontWeight: '500',
   },
   activeFilterText: {
@@ -820,7 +879,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#111827',    
   },
   roleTag: {
     paddingHorizontal: 8,
@@ -834,25 +893,33 @@ const styles = StyleSheet.create({
   },
   userEmail: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#6B7280',    
     marginBottom: 4,
   },
   userPhone: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#6B7280',    
     marginBottom: 12,
   },
   userStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    backgroundColor: '#F9FAFB',
+    padding: 8,
+    borderRadius: 8,
     marginBottom: 12,
   },
-  statItem: {
+  userStatItem: {
     alignItems: 'center',
   },
   statLabel: {
     fontSize: 12,
     color: '#6B7280',
+  },
+  userStatValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
   },
   kycStatus: {
     flexDirection: 'row',
@@ -860,7 +927,7 @@ const styles = StyleSheet.create({
   },
   kycLabel: {
     fontSize: 14,
-    color: '#374151',
+    color: '#374151',    
     marginRight: 8,
   },
   kycBadge: {
@@ -873,12 +940,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  userStatusContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
   userActions: {
     flexDirection: 'row',
     gap: 8,
   },
-  actionButton: {
-    flex: 1,
+  actionButton: {    
+    flex: 1,    
     paddingVertical: 8,
     borderRadius: 8,
     alignItems: 'center',
@@ -890,7 +963,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
   },
   actionButtonText: {
-    color: '#FFFFFF',
+    marginLeft: 4,
+    color: '#FFFFFF',    
     fontSize: 14,
     fontWeight: '600',
   },
@@ -916,11 +990,11 @@ const styles = StyleSheet.create({
   kycType: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#111827',    
   },
   kycDate: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#6B7280',    
   },
   kycUserId: {
     fontSize: 14,
@@ -931,7 +1005,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  kycButton: {
+  kycButton: {    
     flex: 1,
     paddingVertical: 8,
     borderRadius: 8,
@@ -944,7 +1018,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
   },
   kycButtonText: {
-    color: '#FFFFFF',
+    marginLeft: 4,
+    color: '#FFFFFF',    
     fontSize: 14,
     fontWeight: '600',
   },
@@ -970,7 +1045,7 @@ const styles = StyleSheet.create({
   disputeType: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#111827',    
   },
   priorityBadge: {
     paddingHorizontal: 8,
@@ -984,12 +1059,12 @@ const styles = StyleSheet.create({
   },
   disputeDescription: {
     fontSize: 14,
-    color: '#374151',
+    color: '#374151',    
     marginBottom: 8,
   },
   disputeReporter: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#6B7280',    
     marginBottom: 12,
   },
   disputeActions: {
@@ -997,7 +1072,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   disputeButton: {
-    flex: 1,
+    flex: 1,    
     paddingVertical: 8,
     borderRadius: 8,
     alignItems: 'center',
@@ -1009,7 +1084,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
   },
   disputeButtonText: {
-    color: '#FFFFFF',
+    marginLeft: 4,
+    color: '#FFFFFF',    
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1035,27 +1111,27 @@ const styles = StyleSheet.create({
   refundAmount: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#111827',    
   },
   refundDate: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#6B7280',    
   },
   refundReason: {
     fontSize: 14,
-    color: '#374151',
+    color: '#374151',    
     marginBottom: 8,
   },
   refundRequester: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#6B7280',    
     marginBottom: 12,
   },
   refundActions: {
     flexDirection: 'row',
     gap: 8,
   },
-  refundButton: {
+  refundButton: {    
     flex: 1,
     paddingVertical: 8,
     borderRadius: 8,
@@ -1071,7 +1147,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6',
   },
   refundButtonText: {
-    color: '#FFFFFF',
+    marginLeft: 4,
+    color: '#FFFFFF',    
     fontSize: 12,
     fontWeight: '600',
   },

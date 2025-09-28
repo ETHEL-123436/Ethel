@@ -1,33 +1,32 @@
-import { useState, useEffect, useRef } from "react";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
-  ScrollView, 
-  Alert, 
-  ActivityIndicator
-} from "react-native";
-import { Stack, router } from "expo-router";
-import { 
-  MapPin, 
-  Calendar, 
-  Clock, 
-  Users, 
-  DollarSign
-} from "lucide-react-native";
-import MapView, { 
-  Marker, 
-  PROVIDER_GOOGLE, 
-  Region, 
-  MapPressEvent 
-} from "react-native-maps";
-import DateTimePicker from '@react-native-community/datetimepicker';
-import * as ExpoLocation from 'expo-location';
 import { useAuth } from "@/providers/auth-provider";
 import { useRides } from "@/providers/ride-provider";
 import { Location as LocationType } from "@/types";
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ExpoLocation from 'expo-location';
+import { Stack, router } from "expo-router";
+import {
+  Calendar,
+  Clock,
+  DollarSign,
+  MapPin,
+  Users
+} from "lucide-react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native";
+import MapView, {
+  MapPressEvent,
+  Marker,
+  PROVIDER_GOOGLE,
+  Region} from "react-native-maps";
 
 interface RideFormData {
   origin: string;
@@ -70,28 +69,7 @@ export default function CreateRideScreen() {
   });
   
   const mapRef = useRef<MapView>(null);
-  
-  // Check if user is a driver - only drivers can create rides
-  if (user?.role !== 'driver') {
-    return (
-      <>
-        <Stack.Screen options={{ title: "Access Denied" }} />
-        <View style={styles.accessDeniedContainer}>
-          <Text style={styles.accessDeniedTitle}>Access Restricted</Text>
-          <Text style={styles.accessDeniedMessage}>
-            Only drivers can create and offer rides. Please register as a driver to access this feature.
-          </Text>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backButtonText}>Go Back</Text>
-          </TouchableOpacity>
-        </View>
-      </>
-    );
-  }
-  
+
   // Get user's current location when component mounts
   useEffect(() => {
     (async () => {
@@ -120,6 +98,34 @@ export default function CreateRideScreen() {
     })();
   }, []);
 
+  // Check if user is a driver - only drivers can create rides
+  if (user?.role !== 'driver') {
+    return (
+      <>
+        <Stack.Screen options={{ title: "Access Denied" }} />
+        <View style={styles.accessDeniedContainer}>
+          <Text style={styles.accessDeniedTitle}>Access Restricted</Text>
+          <Text style={styles.accessDeniedMessage}>
+            Only drivers can create and offer rides. Upgrade your account to a driver profile to access this feature.
+          </Text>
+          <View style={styles.accessDeniedActions}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.backButtonText}>Go Back</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.upgradeButton}
+              onPress={() => router.push('/(settings)/become-driver' as any)}
+            >
+              <Text style={styles.upgradeButtonText}>Upgrade to Driver</Text>
+            </TouchableOpacity>          </View>
+        </View>
+      </>
+    );
+  }
+  
   const validateForm = (): { isValid: boolean; message?: string } => {
     if (!rideForm.origin || !rideForm.destination) {
       return { isValid: false, message: 'Please enter both origin and destination' };
@@ -476,6 +482,7 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     height: 250,
+    width: '100%',
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 20,
@@ -612,6 +619,11 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 32,
   },
+  accessDeniedActions: {
+    flexDirection: 'row',
+    gap: 16,
+    alignItems: 'center',
+  },
   backButton: {
     backgroundColor: '#667eea',
     paddingHorizontal: 24,
@@ -619,6 +631,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   backButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  upgradeButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  upgradeButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',

@@ -21,7 +21,7 @@ export default function AdminLoginScreen() {
     }
 
     try {
-      const user = await login(trimmedEmail, password);
+      const user = await login(trimmedEmail, password, 'admin');
       if (user.role === 'admin') {
         router.replace("/(admin)/dashboard");
       } else {

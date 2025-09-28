@@ -23,8 +23,11 @@ exports.createBooking = asyncHandler(async (req, res, next) => {
   }
   
   // Check if there are enough available seats
-  const availableSeats = ride.availableSeats - ride.passengers.filter(p => p.status === 'confirmed').length;
-  if (seatsBooked > availableSeats) {
+  const bookedSeats = ride.passengers
+    .filter(p => ['confirmed', 'pending'].includes(p.status))
+    .reduce((sum, p) => sum + p.seatsBooked, 0); // Assuming passenger object has seatsBooked
+  const availableSeats = ride.availableSeats - bookedSeats;
+  if (seatsBooked > ride.availableSeats) {
     return next(new ErrorResponse(`Only ${availableSeats} seats available`, 400));
   }
   

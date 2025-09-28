@@ -26,7 +26,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 // @route   POST /api/users/login
 // @access  Public
 exports.login = asyncHandler(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   // Validate email & password
   if (!email || !password) {
@@ -45,6 +45,23 @@ exports.login = asyncHandler(async (req, res, next) => {
 
   if (!isMatch) {
     return next(new ErrorResponse('Invalid credentials', 401));
+  }
+
+  // Handle role validation - be flexible with role mapping
+  if (role) {
+    // Map frontend roles to backend roles
+    const roleMapping = {
+      'passenger': ['user', 'passenger'],
+      'driver': ['driver'],
+      'admin': ['admin']
+    };
+    
+    const allowedRoles = roleMapping[role] || [role];
+    
+    // Only check role for admin login - allow passengers and drivers to login with any compatible role
+    if (role === 'admin' && !allowedRoles.includes(user.role)) {
+      return next(new ErrorResponse('Invalid credentials for this role', 401));
+    }
   }
 
   sendTokenResponse(user, 200, res);
@@ -190,11 +207,6 @@ const sendTokenResponse = (user, statusCode, res) => {
     .json({
       success: true,
       token,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: user.toObject() // Send the full user object
     });
 };

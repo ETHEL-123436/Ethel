@@ -231,15 +231,15 @@ exports.deleteRide = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Get rides within a radius
-// @route   GET /api/rides/radius/:lat/:lng/:distance
+// @route   GET /api/rides/radius/:lat/:lng/:distance (distance in km)
 // @access  Public
 exports.getRidesInRadius = asyncHandler(async (req, res, next) => {
   const { lat, lng, distance } = req.params;
-
+  const EARTH_RADIUS_KM = 6378;
   // Calc radius using radians
   // Divide distance by radius of Earth
   // Earth Radius = 3,963 mi / 6,378 km
-  const radius = distance / 3963;
+  const radius = distance / EARTH_RADIUS_KM;
 
   const rides = await Ride.find({
     'startLocation.coordinates': {

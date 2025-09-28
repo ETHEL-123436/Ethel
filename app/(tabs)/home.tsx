@@ -1,13 +1,12 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Dimensions } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Car, MapPin, Star, Plus, Search, Map as MapIcon } from "lucide-react-native";
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
-import * as ExpoLocation from 'expo-location';
-import { useEffect, useState, useRef } from 'react';
 import { useAuth } from "@/providers/auth-provider";
 import { useRides } from "@/providers/ride-provider";
-import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
+import * as ExpoLocation from 'expo-location';
+import { router } from "expo-router";
+import { MapPin, Plus, Search } from "lucide-react-native";
+import { useEffect, useRef, useState } from 'react';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
@@ -25,7 +24,7 @@ export default function HomeScreen() {
   
   const isDriver = user?.role === 'driver';
   const userRides = isDriver ? rides.filter(r => r.driverId === user?.id) : [];
-  const userBookings = bookings.filter(b => b.passengerId === user?.id);
+  const userBookings = bookings.filter(b => b.passenger?.id === user?.id || b.passengerId === user?.id);
   
   // Get user's current location when component mounts
   useEffect(() => {
@@ -190,8 +189,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   mapContainer: {
-    height: 300,
+    height: 250,
     width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   map: {
     ...StyleSheet.absoluteFillObject,

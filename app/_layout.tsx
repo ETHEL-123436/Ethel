@@ -1,6 +1,7 @@
 import { AdminProvider } from "@/providers/admin-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 import { RideProvider } from "@/providers/ride-provider";
+import { MessagingProvider } from "@/providers/messaging-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -23,7 +24,6 @@ function RootLayoutNav() {
       <Stack.Screen name="booking-details" options={{ title: "Booking Details" }} />
       <Stack.Screen name="payment" options={{ title: "Payment" }} />
       <Stack.Screen name="chat" options={{ title: "Chat" }} />
-      <Stack.Screen name="kyc-upload" options={{ title: "KYC Verification" }} />
       <Stack.Screen name="tracking" options={{ title: "Live Tracking" }} />
       <Stack.Screen name="(admin)" options={{ headerShown: false }} />
       <Stack.Screen name="payment-methods" options={{ title: "Payment Methods" }} />
@@ -43,7 +43,9 @@ export default function RootLayout() {
         <AuthProvider>
           <RideProvider>
             <AdminProvider>
-              <RootLayoutNav />
+              <MessagingProvider>
+                <RootLayoutNav />
+              </MessagingProvider>
             </AdminProvider>
           </RideProvider>
         </AuthProvider>

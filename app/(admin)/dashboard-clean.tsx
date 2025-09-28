@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Users, Car, CreditCard, TrendingUp, AlertTriangle, MapPin } from 'lucide-react-native';
+import { Users, Car, CreditCard, TrendingUp, AlertTriangle, MapPin, ArrowRight } from 'lucide-react-native';
 import { useAdmin } from '@/providers/admin-provider';
+import { useRouter } from 'expo-router';
 
 export default function AdminDashboard() {
   const insets = useSafeAreaInsets();
-  const { stats, getOpenDisputes } = useAdmin();
-  
+  const { stats } = useAdmin();
+  const router = useRouter();
+
   const recentActivity = [
     { id: '1', message: 'New user registration: John Doe', time: '2 minutes ago', color: '#4CAF50' },
     { id: '2', message: 'Payment processed: 15,000 XAF', time: '5 minutes ago', color: '#2196F3' },
     { id: '3', message: 'Dispute opened: Ride #1234', time: '10 minutes ago', color: '#f44336' },
     { id: '4', message: 'KYC document approved', time: '15 minutes ago', color: '#4CAF50' },
   ];
+
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('today');
 
   const periods = [
@@ -56,7 +59,7 @@ export default function AdminDashboard() {
           <View style={styles.statIcon}>
             <Users size={24} color="#667eea" />
           </View>
-          <Text style={styles.statValue}>{stats.totalUsers.toLocaleString()}</Text>
+          <Text style={styles.statValue}>{stats?.totalUsers?.toLocaleString() || '0'}</Text>
           <Text style={styles.statLabel}>Total Users</Text>
           <View style={styles.statChange}>
             <TrendingUp size={12} color="#4CAF50" />
@@ -68,7 +71,7 @@ export default function AdminDashboard() {
           <View style={styles.statIcon}>
             <Car size={24} color="#667eea" />
           </View>
-          <Text style={styles.statValue}>{stats.totalRides.toLocaleString()}</Text>
+          <Text style={styles.statValue}>{stats?.totalRides?.toLocaleString() || '0'}</Text>
           <Text style={styles.statLabel}>Total Rides</Text>
           <View style={styles.statChange}>
             <TrendingUp size={12} color="#4CAF50" />
@@ -80,7 +83,7 @@ export default function AdminDashboard() {
           <View style={styles.statIcon}>
             <CreditCard size={24} color="#667eea" />
           </View>
-          <Text style={styles.statValue}>{stats.totalRevenue.toLocaleString()} XAF</Text>
+          <Text style={styles.statValue}>{stats?.totalRevenue?.toLocaleString() || '0'} XAF</Text>
           <Text style={styles.statLabel}>Total Revenue</Text>
           <View style={styles.statChange}>
             <TrendingUp size={12} color="#4CAF50" />
@@ -92,12 +95,34 @@ export default function AdminDashboard() {
           <View style={styles.statIcon}>
             <AlertTriangle size={24} color="#f44336" />
           </View>
-          <Text style={styles.statValue}>{stats.openDisputes}</Text>
+          <Text style={styles.statValue}>{stats?.openDisputes || 0}</Text>
           <Text style={styles.statLabel}>Active Disputes</Text>
           <View style={styles.statChange}>
             <Text style={[styles.statChangeText, { color: '#f44336' }]}>Needs attention</Text>
           </View>
         </View>
+      </View>
+
+      {/* User Management Section - Prominent placement */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>👥 User Management</Text>
+        <TouchableOpacity
+          style={styles.userManagementCard}
+          onPress={() => router.push('/users')}
+        >
+          <View style={styles.userManagementContent}>
+            <View style={styles.userManagementLeft}>
+              <Users size={32} color="#667eea" />
+              <View>
+                <Text style={styles.userManagementTitle}>View All Users</Text>
+                <Text style={styles.userManagementSubtitle}>
+                  {stats?.totalUsers?.toLocaleString() || '0'} registered users
+                </Text>
+              </View>
+            </View>
+            <ArrowRight size={24} color="#667eea" />
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* Live Map Preview */}
@@ -106,7 +131,7 @@ export default function AdminDashboard() {
         <View style={styles.mapPreview}>
           <MapPin size={32} color="#667eea" />
           <Text style={styles.mapText}>Interactive map showing active rides</Text>
-          <Text style={styles.mapSubtext}>{stats.activeRides} rides currently active</Text>
+          <Text style={styles.mapSubtext}>{stats?.activeRides || 0} rides currently active</Text>
         </View>
       </View>
 
@@ -128,7 +153,7 @@ export default function AdminDashboard() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.quickAction}>
+          <TouchableOpacity style={styles.quickAction} onPress={() => router.push('/users')}>
             <Users size={20} color="#667eea" />
             <Text style={styles.quickActionText}>Manage Users</Text>
           </TouchableOpacity>
@@ -252,6 +277,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 16,
+  },
+  userManagementCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    borderLeftWidth: 4,
+    borderLeftColor: '#667eea',
+  },
+  userManagementContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  userManagementLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  userManagementTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  userManagementSubtitle: {
+    fontSize: 14,
+    color: '#666',
   },
   mapPreview: {
     backgroundColor: 'white',

@@ -6,15 +6,22 @@ const {
   getActivityLogs,
   getDashboardStats,
   updateUserRole,
-  updateUserStatus
+  updateUserStatus,
+  getRefundRequests
 } = require('../controllers/adminController');
+const {
+  getKYCDocuments,
+  getKYCDocument,
+  updateKYCDocument,
+  deleteKYCDocument,
+  getKYCStats
+} = require('../controllers/kycController');
 const { protect, authorize } = require('../middleware/auth');
 const advancedResults = require('../middleware/advancedResults');
 const User = require('../models/userModel');
 const ActivityLog = require('../models/activityLogModel');
-
-// Re-route into other resource routers
-// router.use('/:userId/bookings', bookingRouter);
+const Booking = require('../models/bookingModel');
+const KYCDocument = require('../models/kycDocumentModel');
 
 // Admin protected routes - must be admin to access
 router.use(protect);
@@ -40,11 +47,31 @@ router
 // Activity logs
 router
   .route('/activity-logs')
-  .get(advancedResults(ActivityLog, 'user'), getActivityLogs);
+  .get(advancedResults(ActivityLog, 'userId'), getActivityLogs);
 
 // Dashboard
 router
   .route('/dashboard-stats')
   .get(getDashboardStats);
+
+// Refund requests
+router
+  .route('/refund-requests')
+  .get(advancedResults(Booking, 'user'), getRefundRequests);
+
+// KYC Document routes
+router
+  .route('/kyc-documents')
+  .get(advancedResults(KYCDocument, 'userId'), getKYCDocuments);
+
+router
+  .route('/kyc-documents/:id')
+  .get(getKYCDocument)
+  .put(updateKYCDocument)
+  .delete(deleteKYCDocument);
+
+router
+  .route('/kyc-stats')
+  .get(getKYCStats);
 
 module.exports = router;

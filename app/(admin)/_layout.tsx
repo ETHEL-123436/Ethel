@@ -32,7 +32,7 @@ function AdminTabs() {
           tabBarIcon: ({ color, size }) => <BarChart3 color={color} size={size} />,
         }}
       />
-      
+
       <Tabs.Screen
         name="users"
         options={{

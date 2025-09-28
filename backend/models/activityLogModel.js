@@ -9,7 +9,22 @@ const activityLogSchema = new mongoose.Schema({
   action: {
     type: String,
     required: true,
-    enum: ['login', 'logout', 'ride_requested', 'ride_accepted', 'ride_completed', 'payment_made', 'account_updated', 'document_uploaded']
+    enum: [
+      'login', 
+      'logout', 
+      'ride_requested', 
+      'ride_accepted', 
+      'ride_completed', 
+      'payment_made', 
+      'account_updated', 
+      'document_uploaded',
+      'role_updated',
+      'status_updated',
+      'dispute_opened',
+      'user_registered',
+      'user_suspended',
+      'user_banned'
+    ]
   },
   details: {
     type: mongoose.Schema.Types.Mixed,

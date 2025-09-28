@@ -6,7 +6,8 @@
     "start": "bunx rork start -p grfvjkm2dd3t018keu18t --tunnel",
     "start-web": "bunx rork start -p grfvjkm2dd3t018keu18t --web --tunnel",
     "start-web-dev": "DEBUG=expo* bunx rork start -p grfvjkm2dd3t018keu18t --web --tunnel",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "node tests/geoutils.test.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

@@ -94,7 +94,7 @@ export default function ProfileScreen() {
       <View style={styles.menu}>
         <TouchableOpacity 
           style={styles.menuItem}
-          onPress={() => router.push('/kyc-upload')}
+          onPress={() => router.push('/(settings)/kyc-upload')}
         >
           <Upload size={20} color="#667eea" />
           <Text style={styles.menuText}>KYC Verification</Text>

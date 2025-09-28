@@ -1,59 +1,43 @@
-import { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from "react-native";
-import { MessageCircle, Search, User, Clock } from "lucide-react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
-
-interface ChatThread {
-  id: string;
-  userId: string;
-  userName: string;
-  lastMessage: string;
-  lastMessageTime: string;
-  unreadCount: number;
-  avatar?: string;
-}
+import { ConversationItem } from '@/app/components/messaging/ConversationItem';
+import { useAuth } from '@/providers/auth-provider';
+import { useMessaging } from '@/providers/messaging-provider';
+import type { ConversationThread } from '@/types/messaging';
+import { router } from 'expo-router';
+import { MessageCircle, Search } from 'lucide-react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MessagesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const insets = useSafeAreaInsets();
-  
-  // Mock chat threads
-  const chatThreads: ChatThread[] = [
-    {
-      id: 'thread1',
-      userId: 'driver1',
-      userName: 'Jean-Paul Mbarga',
-      lastMessage: 'I\'ll be there in 5 minutes',
-      lastMessageTime: '2 min ago',
-      unreadCount: 1,
-    },
-    {
-      id: 'thread2',
-      userId: 'passenger1',
-      userName: 'Alice Kamga',
-      lastMessage: 'Thank you for the ride!',
-      lastMessageTime: '1 hour ago',
-      unreadCount: 0,
-    },
-    {
-      id: 'thread3',
-      userId: 'driver2',
-      userName: 'Marie Nguema',
-      lastMessage: 'Pickup location confirmed',
-      lastMessageTime: '3 hours ago',
-      unreadCount: 0,
-    },
-  ];
+  const { user } = useAuth();
+  const { threads, userStatuses } = useMessaging();
 
-  const filteredThreads = chatThreads.filter(thread =>
-    thread.userName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredThreads = threads.filter(thread => {
+    // Get the other participant's name for filtering
+    const otherParticipant = thread.participants.find(p => p !== user?.id);
+    const nameMap: Record<string, string> = {
+      'driver1': 'Jean-Paul Mbarga',
+      'driver2': 'Marie Nguema', 
+      'passenger1': 'Alice Kamga',
+      'passenger2': 'Robert Essomba'
+    };
+    const participantName = otherParticipant ? nameMap[otherParticipant] || '' : '';
+    return participantName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
-  const handleChatPress = (thread: ChatThread) => {
-    if (!thread.userId?.trim() || !thread.userName?.trim()) return;
+  const handleThreadPress = (thread: ConversationThread) => {
+    const otherParticipant = thread.participants.find(p => p !== user?.id);
+    const nameMap: Record<string, string> = {
+      'driver1': 'Jean-Paul Mbarga',
+      'driver2': 'Marie Nguema',
+      'passenger1': 'Alice Kamga', 
+      'passenger2': 'Robert Essomba'
+    };
+    const participantName = otherParticipant ? nameMap[otherParticipant] : 'Unknown';
     
-    router.push(`../chat?userId=${thread.userId}&userName=${encodeURIComponent(thread.userName)}` as any);
+    router.push(`../chat?threadId=${thread.id}&userId=${otherParticipant}&userName=${encodeURIComponent(participantName)}` as any);
   };
 
   return (
@@ -77,43 +61,20 @@ export default function MessagesScreen() {
 
       <ScrollView style={styles.chatsList} showsVerticalScrollIndicator={false}>
         {filteredThreads.length > 0 ? (
-          filteredThreads.map((thread) => (
-            <TouchableOpacity
-              key={thread.id}
-              style={styles.chatItem}
-              onPress={() => handleChatPress(thread)}
-            >
-              <View style={styles.avatarContainer}>
-                <View style={styles.avatar}>
-                  <User size={24} color="#667eea" />
-                </View>
-                {thread.unreadCount > 0 && (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadText}>{thread.unreadCount}</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.chatContent}>
-                <View style={styles.chatHeader}>
-                  <Text style={styles.userName}>{thread.userName}</Text>
-                  <View style={styles.timeContainer}>
-                    <Clock size={12} color="#999" />
-                    <Text style={styles.timeText}>{thread.lastMessageTime}</Text>
-                  </View>
-                </View>
-                <Text 
-                  style={[
-                    styles.lastMessage,
-                    thread.unreadCount > 0 && styles.unreadMessage
-                  ]}
-                  numberOfLines={1}
-                >
-                  {thread.lastMessage}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))
+          filteredThreads.map((thread) => {
+            const otherParticipant = thread.participants.find(p => p !== user?.id);
+            const userStatus = otherParticipant ? userStatuses[otherParticipant] : undefined;
+            
+            return (
+              <ConversationItem
+                key={thread.id}
+                thread={thread}
+                userStatus={userStatus}
+                onPress={handleThreadPress}
+                currentUserId={user?.id || ''}
+              />
+            );
+          })
         ) : searchQuery ? (
           <View style={styles.emptyState}>
             <Search size={48} color="#ccc" />

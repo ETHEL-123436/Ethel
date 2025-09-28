@@ -24,23 +24,26 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   };
 
-  const login = async (email: string, password: string, role: 'driver' | 'passenger' = 'passenger'): Promise<User> => {
+  const login = async (email: string, password: string, role: 'driver' | 'passenger' | 'admin' = 'passenger') => {
     setIsLoading(true);
     try {
       console.log('Attempting login with:', { email, role, password: '***' });
-      const API_BASE_URL = 'http://10.11.28.112:5000';
-      
+      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+      if (!API_BASE_URL) {
+        throw new Error('API_BASE_URL is not configured. Please check your .env file.');
+      }
+
       // Make sure email is trimmed to remove any accidental whitespace
       const trimmedEmail = email.trim();
-      
-      const response = await fetch(`${API_BASE_URL}/api/users/login`, {
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/users/login`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ 
-          email: trimmedEmail, 
+        body: JSON.stringify({
+          email: trimmedEmail,
           password,
           role
         })
@@ -49,14 +52,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const responseData = await response.json();
       console.log('Login response status:', response.status);
       console.log('Login response data:', responseData);
-      
+
       if (!response.ok) {
         throw new Error(responseData.message || `Login failed with status ${response.status}`);
       }
 
       // The backend sends the token and user data in the response
       const { token, user: userData } = responseData;
-      
+
       if (!userData || !token) {
         console.error('Invalid response format:', responseData);
         throw new Error('Invalid server response format');
@@ -74,7 +77,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         rating: userData.rating || 0,
         totalRides: userData.totalRides || 0,
         walletBalance: userData.walletBalance || 0,
-        vehicleInfo: userData.vehicleInfo,
         token
       };
 
@@ -89,11 +91,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
       });
-      
-      const errorMessage = error instanceof Error 
-        ? error.message 
+
+      const errorMessage = error instanceof Error
+        ? error.message
         : 'Login failed. Please check your credentials and try again.';
-      
+
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -112,12 +114,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       console.log('Attempting registration with:', { name, email, phone, role });
       
       // Use the same API base URL as login
-      const API_BASE_URL = 'http://10.11.28.112:5000';
+      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+      if (!API_BASE_URL) {
+        throw new Error('API_BASE_URL is not configured. Please check your .env file.');
+      }
       
       // Trim email to remove any whitespace
       const trimmedEmail = email.trim();
       
-      const response = await fetch(`${API_BASE_URL}/api/users/register`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/users/register`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -209,7 +214,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const updateUser = async (updates: Partial<User>) => {
     if (!user) return;
-    
+
     const updatedUser = { ...user, ...updates };
     await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
     setUser(updatedUser);

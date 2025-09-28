@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Search, CreditCard, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react-native';
 import { useAdmin } from '@/providers/admin-provider';
+import { CheckCircle, Clock, CreditCard, RefreshCw, Search, XCircle } from 'lucide-react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AdminPayments() {
   const insets = useSafeAreaInsets();
@@ -11,21 +11,21 @@ export default function AdminPayments() {
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'pending' | 'completed' | 'failed'>('all');
   const [activeTab, setActiveTab] = useState<'payments' | 'refunds'>('payments');
 
-  const filteredPayments = payments.filter(payment => {
+  const filteredPayments = payments ? payments.filter(payment => {
     const matchesSearch = payment.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          payment.bookingId.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = selectedStatus === 'all' || payment.status === selectedStatus;
     
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
-  const filteredRefunds = refundRequests.filter(refund => {
+  const filteredRefunds = refundRequests ? refundRequests.filter(refund => {
     const matchesSearch = refund.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          refund.bookingId.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          refund.requester.name.toLowerCase().includes(searchQuery.toLowerCase());
     
     return matchesSearch;
-  });
+  }) : [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -50,7 +50,7 @@ export default function AdminPayments() {
   };
 
   const handleProcessRefund = (refundId: string, status: 'approved' | 'rejected') => {
-    processRefund(refundId, status === 'approved' ? 'processed' : 'rejected', 'admin');
+    processRefund(refundId, status === 'approved' ? 'approve' : 'reject', 'admin');
   };
 
   return (
@@ -68,7 +68,7 @@ export default function AdminPayments() {
         >
           <CreditCard size={20} color={activeTab === 'payments' ? '#667eea' : '#666'} />
           <Text style={[styles.tabText, activeTab === 'payments' && styles.activeTabText]}>
-            Payments ({payments.length})
+            Payments ({payments?.length || 0})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -77,7 +77,7 @@ export default function AdminPayments() {
         >
           <RefreshCw size={20} color={activeTab === 'refunds' ? '#667eea' : '#666'} />
           <Text style={[styles.tabText, activeTab === 'refunds' && styles.activeTabText]}>
-            Refunds ({refundRequests.length})
+            Refunds ({refundRequests?.length || 0})
           </Text>
         </TouchableOpacity>
       </View>
@@ -119,8 +119,6 @@ export default function AdminPayments() {
           </View>
         )}
       </View>
-
-      {/* Content */}
       {activeTab === 'payments' ? (
         <View style={styles.paymentsList}>
           <Text style={styles.resultsCount}>

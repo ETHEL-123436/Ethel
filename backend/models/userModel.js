@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  status: {
+    type: String,
+    enum: ['active', 'suspended', 'banned'],
+    default: 'active'
+  },
   currentLocation: {
     type: {
       type: String,
@@ -58,12 +63,56 @@ const userSchema = new mongoose.Schema({
     },
     address: String
   },
-  resetPasswordToken: String,
-  resetPasswordExpire: Date,
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+  kycStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  kycDocuments: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'KYCDocument'
+  }],
+  // Passenger verification fields
+  passengerVerificationStatus: {
+    type: String,
+    enum: ['not_submitted', 'pending', 'approved', 'rejected'],
+    default: 'not_submitted'
+  },
+  passengerVerificationSubmittedAt: {
+    type: Date
+  },
+  exnessVerificationStatus: {
+    type: String,
+    enum: ['not_verified', 'pending', 'approved', 'rejected'],
+    default: 'not_verified'
+  },
+  exnessVerificationResult: {
+    type: Object
+  },
+  exnessVerifiedAt: {
+    type: Date
+  },
+  rating: {
+    type: Number,
+    default: 5.0,
+    min: 0,
+    max: 5
+  },
+  totalRides: {
+    type: Number,
+    default: 0
+  },
+  walletBalance: {
+    type: Number,
+    default: 0
+  },
+  vehicleInfo: {
+    make: String,
+    model: String,
+    year: Number,
+    color: String,
+    plateNumber: String
+  },
 }, {
   toJSON: { virtuals: true },
   toObject: { virtuals: true }

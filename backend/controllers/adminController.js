@@ -1,15 +1,46 @@
-const User = require('../models/userModel');
-const Ride = require('../models/rideModel');
-const Booking = require('../models/bookingModel');
-const ActivityLog = require('../models/activityLogModel');
 const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errorResponse');
+const User = require('../models/userModel');
+const ActivityLog = require('../models/activityLogModel');
+const Ride = require('../models/rideModel');
+const Booking = require('../models/bookingModel');
+
+// @desc    Get refund requests
+// @route   GET /api/admin/refund-requests
+// @access  Private/Admin
+exports.getRefundRequests = asyncHandler(async (req, res, next) => {
+  // Transform the advancedResults to match the expected frontend structure
+  const transformedResponse = {
+    success: true,
+    data: {
+      data: res.advancedResults.data,
+      total: res.advancedResults.pagination ? res.advancedResults.total || res.advancedResults.count : res.advancedResults.data.length,
+      page: res.advancedResults.pagination?.page || 1,
+      limit: res.advancedResults.pagination?.limit || res.advancedResults.data.length,
+      totalPages: res.advancedResults.pagination ? Math.ceil(res.advancedResults.total / res.advancedResults.limit) : 1
+    }
+  };
+
+  res.status(200).json(transformedResponse);
+});
 
 // @desc    Get all users with filtering and pagination
 // @route   GET /api/v1/admin/users
 // @access  Private/Admin
 exports.getUsers = asyncHandler(async (req, res, next) => {
-  res.status(200).json(res.advancedResults);
+  // Transform the advancedResults to match the expected frontend structure
+  const transformedResponse = {
+    success: true,
+    data: {
+      data: res.advancedResults.data,
+      total: res.advancedResults.pagination ? res.advancedResults.total || res.advancedResults.count : res.advancedResults.data.length,
+      page: res.advancedResults.pagination?.page || 1,
+      limit: res.advancedResults.pagination?.limit || res.advancedResults.data.length,
+      totalPages: res.advancedResults.pagination ? Math.ceil(res.advancedResults.total / res.advancedResults.limit) : 1
+    }
+  };
+
+  res.status(200).json(transformedResponse);
 });
 
 // @desc    Get single user
@@ -34,97 +65,58 @@ exports.getUser = asyncHandler(async (req, res, next) => {
 // @route   GET /api/v1/admin/activity-logs
 // @access  Private/Admin
 exports.getActivityLogs = asyncHandler(async (req, res, next) => {
-  // Copy req.query
-  const reqQuery = { ...req.query };
-
-  // Fields to exclude
-  const removeFields = ['select', 'sort', 'page', 'limit'];
-
-  // Loop over removeFields and delete them from reqQuery
-  removeFields.forEach(param => delete reqQuery[param]);
-
-  // Create query string
-  let queryStr = JSON.stringify(reqQuery);
-  
-  // Create operators ($gt, $gte, etc)
-  queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
-
-  // Finding resource
-  let query = ActivityLog.find(JSON.parse(queryStr)).populate('user', 'name email role');
-
-  // Select Fields
-  if (req.query.select) {
-    const fields = req.query.select.split(',').join(' ');
-    query = query.select(fields);
-  }
-
-  // Sort
-  if (req.query.sort) {
-    const sortBy = req.query.sort.split(',').join(' ');
-    query = query.sort(sortBy);
-  } else {
-    query = query.sort('-createdAt');
-  }
-
-  // Pagination
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 25;
-  const startIndex = (page - 1) * limit;
-  const endIndex = page * limit;
-  const total = await ActivityLog.countDocuments(JSON.parse(queryStr));
-
-  query = query.skip(startIndex).limit(limit);
-
-  // Executing query
-  const results = await query;
-
-  // Pagination result
-  const pagination = {};
-
-  if (endIndex < total) {
-    pagination.next = {
-      page: page + 1,
-      limit
-    };
-  }
-
-  if (startIndex > 0) {
-    pagination.prev = {
-      page: page - 1,
-      limit
-    };
-  }
-
-  res.status(200).json({
+  // Transform the advancedResults to match the expected frontend structure
+  const transformedResponse = {
     success: true,
-    count: results.length,
-    pagination,
-    data: results
-  });
+    data: {
+      data: res.advancedResults.data,
+      total: res.advancedResults.pagination ? res.advancedResults.total || res.advancedResults.count : res.advancedResults.data.length,
+      page: res.advancedResults.pagination?.page || 1,
+      limit: res.advancedResults.pagination?.limit || res.advancedResults.data.length,
+      totalPages: res.advancedResults.pagination ? Math.ceil(res.advancedResults.total / res.advancedResults.limit) : 1
+    }
+  };
+  
+  res.status(200).json(transformedResponse);
 });
 
 // @desc    Get dashboard statistics
 // @route   GET /api/v1/admin/dashboard-stats
 // @access  Private/Admin
 exports.getDashboardStats = asyncHandler(async (req, res, next) => {
-  const [totalUsers, totalDrivers, totalRides, totalRevenue] = await Promise.all([
+  const [totalUsers, totalDrivers, totalRides, totalBookings, totalRevenue, activeUsers] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ role: 'driver' }),
     Ride.countDocuments(),
+    Booking.countDocuments(),
     Booking.aggregate([
       { $match: { status: 'completed' } },
       { $group: { _id: null, total: { $sum: '$fare' } } }
-    ]).then(result => result[0]?.total || 0)
+    ]).then(result => (result[0]?.total || 0)),
+    User.countDocuments({ status: 'active' })
   ]);
 
   const stats = {
     totalUsers,
     totalDrivers,
     totalRides,
+    totalBookings,
     totalRevenue,
+    activeUsers,
     pendingKYC: await User.countDocuments({ role: 'driver', status: 'pending' }),
     openDisputes: await ActivityLog.countDocuments({ action: 'dispute_opened' }),
-    pendingRefunds: await Booking.countDocuments({ paymentStatus: 'refunded' })
+    pendingRefunds: await Booking.countDocuments({ paymentStatus: 'refunded' }),
+    recentActivities: await ActivityLog.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('user', 'name email role'),
+    userGrowth: [], // This would need more complex aggregation for time-series data
+    revenueByMonth: [], // This would need more complex aggregation for monthly data
+    rideStats: {
+      completed: await Ride.countDocuments({ status: 'completed' }),
+      cancelled: await Ride.countDocuments({ status: 'cancelled' }),
+      inProgress: await Ride.countDocuments({ status: 'in_progress' })
+    }
   };
 
   res.status(200).json({
