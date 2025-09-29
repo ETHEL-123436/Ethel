@@ -1,14 +1,29 @@
-import { useAdmin } from '@/providers/admin-provider';
-import { Car, Clock, DollarSign, MapPin, Search, User } from 'lucide-react-native';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Search, Car, MapPin, Clock, User, DollarSign } from 'lucide-react-native';
+import { useAdmin } from '@/providers/admin-provider';
 
-export default function RidesScreen() {
-  const { rides } = useAdmin();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('all');
+export default function AdminRides() {
   const insets = useSafeAreaInsets();
+  const { rides } = useAdmin();
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'cancelled'>('all');
+
+  const filteredRides = rides.filter(ride => {
+    const searchTerm = searchQuery.toLowerCase();
+    const originAddress = ride.origin?.address?.toLowerCase() || '';
+    const destinationAddress = ride.destination?.address?.toLowerCase() || '';
+    
+    const matchesSearch = 
+      (ride.driver?.name?.toLowerCase() || '').includes(searchTerm) ||
+      originAddress.includes(searchTerm) ||
+      destinationAddress.includes(searchTerm);
+      
+    const matchesStatus = selectedStatus === 'all' || ride.status === selectedStatus;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -19,20 +34,6 @@ export default function RidesScreen() {
     }
   };
 
-  const filteredRides = rides.filter(ride => {
-    const searchTerm = searchQuery.toLowerCase();
-    const originAddress = ride.origin?.address?.toLowerCase() || '';
-    const destinationAddress = ride.destination?.address?.toLowerCase() || '';
-    
-    const matchesSearch = 
-      ride.driver?.name?.toLowerCase().includes(searchTerm) ||
-      originAddress.includes(searchTerm) ||
-      destinationAddress.includes(searchTerm);
-      
-    const matchesStatus = selectedStatus === 'all' || ride.status === selectedStatus;
-    
-    return matchesSearch && matchesStatus;
-  });
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
@@ -90,8 +91,8 @@ export default function RidesScreen() {
                   <User size={20} color="#667eea" />
                 </View>
                 <View>
-                  <Text style={styles.driverName}>{ride.driver.name}</Text>
-                  <Text style={styles.rideId}>Ride #{ride.id.slice(-6)}</Text>
+                  <Text style={styles.driverName}>{ride.driver?.name || 'Unknown Driver'}</Text>
+                  <Text style={styles.rideId}>Ride #{ride.id?.slice(-6) || ''}</Text>
                 </View>
               </View>
               <View style={[
@@ -105,12 +106,16 @@ export default function RidesScreen() {
             <View style={styles.routeInfo}>
               <View style={styles.locationRow}>
                 <MapPin size={16} color="#4CAF50" />
-                <Text style={styles.locationText}>{ride.origin.address}</Text>
+                <Text style={styles.locationText}>
+                  {ride.origin?.address || 'No origin address'}
+                </Text>
               </View>
               <View style={styles.routeLine} />
               <View style={styles.locationRow}>
                 <MapPin size={16} color="#f44336" />
-                <Text style={styles.locationText}>{ride.destination.address}</Text>
+                <Text style={styles.locationText}>
+                  {ride.destination?.address || 'No destination address'}
+                </Text>
               </View>
             </View>
 
@@ -118,30 +123,46 @@ export default function RidesScreen() {
               <View style={styles.detailItem}>
                 <Clock size={16} color="#666" />
                 <Text style={styles.detailText}>
-                  {new Date(ride.dateTime).toLocaleDateString()} at {new Date(ride.dateTime).toLocaleTimeString()}
+                  {ride.dateTime 
+                    ? `${new Date(ride.dateTime).toLocaleDateString()} at ${new Date(ride.dateTime).toLocaleTimeString()}`
+                    : 'No date/time'}
                 </Text>
               </View>
               <View style={styles.detailItem}>
                 <DollarSign size={16} color="#666" />
-                <Text style={styles.detailText}>{ride.priceXAF.toLocaleString()} XAF</Text>
+                <Text style={styles.detailText}>
+                  {ride.priceXAF ? `${ride.priceXAF.toLocaleString()} XAF` : 'Price not set'}
+                </Text>
               </View>
               <View style={styles.detailItem}>
                 <Car size={16} color="#666" />
-                <Text style={styles.detailText}>{ride.seatsAvailable}/{ride.totalSeats} seats available</Text>
+                <Text style={styles.detailText}>
+                  {ride.seatsAvailable !== undefined && ride.totalSeats !== undefined
+                    ? `${ride.seatsAvailable}/${ride.totalSeats} seats available`
+                    : 'Seat information not available'}
+                </Text>
               </View>
             </View>
 
             <View style={styles.rideStats}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{ride.distance.toFixed(1)} km</Text>
+                <Text style={styles.statValue}>
+                  {ride.distance ? `${ride.distance.toFixed(1)} km` : 'N/A'}
+                </Text>
                 <Text style={styles.statLabel}>Distance</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{Math.round(ride.duration)} min</Text>
+                <Text style={styles.statValue}>
+                  {ride.duration ? `${Math.round(ride.duration)} min` : 'N/A'}
+                </Text>
                 <Text style={styles.statLabel}>Duration</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{ride.totalSeats - ride.seatsAvailable}</Text>
+                <Text style={styles.statValue}>
+                  {ride.totalSeats !== undefined && ride.seatsAvailable !== undefined
+                    ? ride.totalSeats - ride.seatsAvailable
+                    : 'N/A'}
+                </Text>
                 <Text style={styles.statLabel}>Bookings</Text>
               </View>
             </View>
@@ -234,36 +255,36 @@ const styles = StyleSheet.create({
   filterButtonText: {
     fontSize: 14,
     color: '#666',
-    fontWeight: '500',
   },
   filterButtonTextActive: {
     color: 'white',
+    fontWeight: '600',
   },
   ridesList: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    padding: 16,
+    gap: 16,
   },
   resultsCount: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   rideCard: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    marginBottom: 12,
   },
   rideHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   driverInfo: {
     flexDirection: 'row',
@@ -280,32 +301,35 @@ const styles = StyleSheet.create({
   },
   driverName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#333',
   },
   rideId: {
     fontSize: 12,
-    color: '#666',
+    color: '#999',
+    marginTop: 2,
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
     color: 'white',
-    textTransform: 'uppercase',
+    fontWeight: '600',
+    textTransform: 'capitalize',
   },
   routeInfo: {
-    marginBottom: 16,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 4,
   },
   locationText: {
     flex: 1,
@@ -313,46 +337,50 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   routeLine: {
-    width: 2,
-    height: 20,
+    height: 1,
     backgroundColor: '#e0e0e0',
-    marginLeft: 8,
-    marginVertical: 4,
+    marginVertical: 8,
+    marginLeft: 12,
+    width: '90%',
   },
   rideDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 16,
   },
   detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+    minWidth: '48%',
   },
   detailText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
   },
   rideStats: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#f0f0f0',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    backgroundColor: '#f5f7ff',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
   },
   statItem: {
     alignItems: 'center',
+    flex: 1,
   },
   statValue: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#333',
+    marginBottom: 2,
   },
   statLabel: {
     fontSize: 12,
     color: '#666',
-    marginTop: 2,
   },
   rideActions: {
     flexDirection: 'row',
@@ -361,17 +389,16 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    backgroundColor: '#f0f4ff',
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
     alignItems: 'center',
   },
   actionButtonText: {
-    fontSize: 14,
     color: '#667eea',
-    fontWeight: '500',
+    fontWeight: '600',
+    fontSize: 14,
   },
   cancelButton: {
-    backgroundColor: '#ffebee',
+    backgroundColor: '#fff0f0',
   },
 });

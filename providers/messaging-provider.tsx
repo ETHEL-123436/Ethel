@@ -1,115 +1,123 @@
-import { useAuth } from '@/providers/auth-provider';
-import type { Message, ConversationThread, UserStatusInfo } from '@/types/messaging';
-import { ConnectionStatus, MessageStatus, ConversationType } from '@/types/messaging';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { useAuth } from './auth-provider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 
-interface MessagingContextType {
-  // Connection state
+export enum ConnectionStatus {
+  DISCONNECTED = 'disconnected',
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  RECONNECTING = 'reconnecting',
+  ERROR = 'error'
+}
+
+export enum MessageStatus {
+  SENDING = 'sending',
+  SENT = 'sent',
+  DELIVERED = 'delivered',
+  READ = 'read',
+  FAILED = 'failed'
+}
+
+export enum MessageType {
+  TEXT = 'text',
+  IMAGE = 'image',
+  LOCATION = 'location',
+  SYSTEM = 'system'
+}
+
+export enum ConversationType {
+  RIDE_BOOKING = 'ride_booking',
+  GENERAL = 'general',
+  SUPPORT = 'support'
+}
+
+export interface Message {
+  id: string;
+  threadId: string;
+  senderId: string;
+  content: string;
+  type: MessageType;
+  timestamp: Date;
+  status: MessageStatus;
+  metadata?: any;
+}
+
+export interface ConversationThread {
+  id: string;
+  participants: string[];
+  rideId?: string;
+  bookingId?: string;
+  type: ConversationType;
+  unreadCount: number;
+  lastMessage?: Message;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserStatus {
+  userId: string;
+  isOnline: boolean;
+  lastSeen?: Date;
+  isTyping?: boolean;
+}
+
+export interface MessagingContextType {
   connectionStatus: ConnectionStatus;
   isConnected: boolean;
-  
-  // Messages
   messages: Record<string, Message[]>;
-  sendMessage: (message: Omit<Message, 'id' | 'timestamp' | 'status'>) => Promise<void>;
+  sendMessage: (messageData: Omit<Message, 'id' | 'timestamp' | 'status'>) => Promise<void>;
   markAsRead: (threadId: string, messageIds: string[]) => Promise<void>;
-  
-  // Threads
   threads: ConversationThread[];
   createThread: (params: { rideId?: string; bookingId?: string; participantId: string }) => Promise<ConversationThread>;
-  
-  // User status
-  userStatuses: Record<string, UserStatusInfo>;
+  userStatuses: Record<string, UserStatus>;
   updateTypingStatus: (threadId: string, isTyping: boolean) => void;
-  
-  // Real-time events
   joinThread: (threadId: string) => void;
   leaveThread: (threadId: string) => void;
+  socket?: any;
 }
 
 const MessagingContext = createContext<MessagingContextType | undefined>(undefined);
 
-export function MessagingProvider({ children }: { children: ReactNode }) {
+export function MessagingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [threads, setThreads] = useState<ConversationThread[]>([]);
-  const [userStatuses, setUserStatuses] = useState<Record<string, UserStatusInfo>>({});
-  
-  const socketRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<number | null>(null);
-  const typingTimeoutRef = useRef<Record<string, number>>({});
+  const [userStatuses, setUserStatuses] = useState<Record<string, UserStatus>>({});
+  const socketRef = useRef<any>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
 
+  // Load mock data for development
   const loadMockData = useCallback(async () => {
-    // Load mock data for demonstration
-    const { mockMessages, mockThreads, mockUserStatuses } = await import('@/mocks/messagingMockData');
-
-    // Group messages by thread
-    const messagesByThread: Record<string, Message[]> = {};
-    mockMessages.forEach(msg => {
-      if (!messagesByThread[msg.threadId]) {
-        messagesByThread[msg.threadId] = [];
-      }
-      messagesByThread[msg.threadId].push(msg);
-    });
-
-    setMessages(messagesByThread);
-    setThreads([...mockThreads]);
-    setUserStatuses({ ...mockUserStatuses });
-  }, []);
-
-  const loadOfflineMessages = useCallback(async () => {
     try {
-      const offlineMessages = await AsyncStorage.getItem('offline_messages');
-      if (offlineMessages) {
-        const parsedMessages = JSON.parse(offlineMessages);
-        // Process offline messages
-        console.log('Loaded offline messages:', parsedMessages);
+      // Load existing threads and messages from AsyncStorage
+      const savedThreads = await AsyncStorage.getItem('messaging_threads');
+      const savedMessages = await AsyncStorage.getItem('messaging_messages');
+
+      if (savedThreads) {
+        setThreads(JSON.parse(savedThreads));
+      }
+
+      if (savedMessages) {
+        setMessages(JSON.parse(savedMessages));
       }
     } catch (error) {
-      console.error('Failed to load offline messages:', error);
+      console.error('Error loading messaging data:', error);
     }
   }, []);
 
-  const saveOfflineMessage = useCallback(async (message: Message) => {
+  // Save data to AsyncStorage
+  const saveData = useCallback(async (threads: ConversationThread[], messages: Record<string, Message[]>) => {
     try {
-      const offlineMessages = await AsyncStorage.getItem('offline_messages');
-      const messages = offlineMessages ? JSON.parse(offlineMessages) : [];
-      messages.push(message);
-      await AsyncStorage.setItem('offline_messages', JSON.stringify(messages));
+      await AsyncStorage.setItem('messaging_threads', JSON.stringify(threads));
+      await AsyncStorage.setItem('messaging_messages', JSON.stringify(messages));
     } catch (error) {
-      console.error('Failed to save offline message:', error);
+      console.error('Error saving messaging data:', error);
     }
   }, []);
 
-  const connectRef = useRef<(() => void) | null>(null);
-
-  const scheduleReconnect = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-
-    reconnectTimeoutRef.current = setTimeout(() => {
-      setConnectionStatus(ConnectionStatus.RECONNECTING);
-      if (connectRef.current) {
-        connectRef.current();
-      }
-    }, 5000);
-  }, []);
-
-  const disconnect = useCallback(() => {
-    if (socketRef.current) {
-      socketRef.current.close();
-      socketRef.current = null;
-    }
-    setConnectionStatus(ConnectionStatus.DISCONNECTED);
-
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-  }, []);
-
+  // WebSocket connection
   const connect = useCallback(() => {
     if (!user?.token) {
       console.log('No user token available for messaging connection');
@@ -121,7 +129,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
 
     // Use environment variable for WebSocket URL with fallback
     const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
-    const wsUrl = `${API_BASE_URL.replace('http', 'ws')}/ws?token=${user.token}`;
+    const wsUrl = `${API_BASE_URL.replace('http', 'ws')}`;
 
     console.log('WebSocket URL:', wsUrl);
 
@@ -130,7 +138,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       setTimeout(() => {
         console.log('Messaging connection established (simulated)');
         setConnectionStatus(ConnectionStatus.CONNECTED);
-        loadOfflineMessages();
+        loadMockData();
       }, 1000);
 
       // Load mock data for now
@@ -141,10 +149,68 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       setConnectionStatus(ConnectionStatus.DISCONNECTED);
       scheduleReconnect();
     }
-  }, [user?.token, loadMockData, loadOfflineMessages, scheduleReconnect]);
+  }, [user?.token, loadMockData]);
 
-  // Set the ref after connect is defined
-  connectRef.current = connect;
+  // Schedule reconnection
+  const scheduleReconnect = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+
+    reconnectTimeoutRef.current = setTimeout(() => {
+      console.log('Attempting to reconnect messaging...');
+      setConnectionStatus(ConnectionStatus.RECONNECTING);
+      connect();
+    }, 5000);
+  }, [connect]);
+
+  // Disconnect WebSocket
+  const disconnect = useCallback(() => {
+    console.log('Disconnecting messaging');
+
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
+
+    setConnectionStatus(ConnectionStatus.DISCONNECTED);
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Save offline message
+  const saveOfflineMessage = useCallback(async (message: Message) => {
+    try {
+      const offlineMessages = await AsyncStorage.getItem('offline_messages');
+      const messages = offlineMessages ? JSON.parse(offlineMessages) : [];
+      messages.push(message);
+      await AsyncStorage.setItem('offline_messages', JSON.stringify(messages));
+    } catch (error) {
+      console.error('Error saving offline message:', error);
+    }
+  }, []);
+
+  // Load offline messages
+  const loadOfflineMessages = useCallback(async () => {
+    try {
+      const offlineMessages = await AsyncStorage.getItem('offline_messages');
+      if (offlineMessages) {
+        const messages = JSON.parse(offlineMessages);
+        messages.forEach((message: Message) => {
+          setMessages(prev => ({
+            ...prev,
+            [message.threadId]: [...(prev[message.threadId] || []), message]
+          }));
+        });
+        await AsyncStorage.removeItem('offline_messages');
+      }
+    } catch (error) {
+      console.error('Error loading offline messages:', error);
+    }
+  }, []);
 
   const sendMessage = useCallback(async (messageData: Omit<Message, 'id' | 'timestamp' | 'status'>) => {
     console.log('Sending message:', messageData);
@@ -154,7 +220,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       ...messageData,
       id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
-      status: MessageStatus.SENDING // Always start as sending, let the UI handle the actual sending
+      status: MessageStatus.SENDING
     };
 
     console.log('Created message:', message);
@@ -209,21 +275,21 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   const markAsRead = useCallback(async (threadId: string, messageIds: string[]) => {
     setMessages(prev => ({
       ...prev,
-      [threadId]: prev[threadId]?.map(msg => 
+      [threadId]: prev[threadId]?.map(msg =>
         messageIds.includes(msg.id) ? { ...msg, status: MessageStatus.READ } : msg
       ) || []
     }));
 
     // Update thread unread count
-    setThreads(prev => prev.map(thread => 
+    setThreads(prev => prev.map(thread =>
       thread.id === threadId ? { ...thread, unreadCount: 0 } : thread
     ));
   }, []);
 
-  const createThread = useCallback(async (params: { 
-    rideId?: string; 
-    bookingId?: string; 
-    participantId: string 
+  const createThread = useCallback(async (params: {
+    rideId?: string;
+    bookingId?: string;
+    participantId: string
   }): Promise<ConversationThread> => {
     const newThread: ConversationThread = {
       id: `thread_${Date.now()}`,
@@ -290,6 +356,13 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       disconnect();
     };
   }, [user, connect, disconnect]);
+
+  // Save data when threads or messages change
+  useEffect(() => {
+    if (threads.length > 0 || Object.keys(messages).length > 0) {
+      saveData(threads, messages);
+    }
+  }, [threads, messages, saveData]);
 
   const contextValue: MessagingContextType = {
     connectionStatus,

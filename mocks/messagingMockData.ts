@@ -1,4 +1,4 @@
-import { MessageType, MessageStatus, ConversationType, UserStatus } from '@/types/messaging';
+import { ConversationType, MessageStatus, MessageType, UserStatus } from '@/types/messaging';
 
 // Mock data for messaging system
 export const mockMessages = [

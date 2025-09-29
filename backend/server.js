@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 
 // Import routes (we'll create these next)
 const userRoutes = require('./routes/userRoutes');
@@ -11,8 +13,24 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const passengerRoutes = require('./routes/passengerRoutes');
 
+// Import WebSocket functionality
+const websocketServer = require('./websocket');
+
 // Initialize Express app
 const app = express();
+const server = createServer(app);
+
+// Initialize Socket.IO with the HTTP server
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:8081', 'http://127.0.0.1:8081', 'http://10.168.27.112:8081', 'http://localhost:3000'],
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Store the io instance in the websocket module
+websocketServer.io = io;
 
 // Connect to MongoDB
 connectDB();
@@ -97,6 +115,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`WebSocket server ready for real-time messaging`);
 });

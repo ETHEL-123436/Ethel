@@ -3,13 +3,13 @@ import { MessageBubble } from '@/app/components/messaging/MessageBubble';
 import { MessageInput } from '@/app/components/messaging/MessageInput';
 import { TypingIndicator } from '@/app/components/messaging/TypingIndicator';
 import { useAuth } from '@/providers/auth-provider';
-import { useTheme } from '@/providers/theme-provider';
 import { useMessaging } from '@/providers/messaging-provider';
+import { useTheme } from '@/providers/theme-provider';
 import type { Message } from '@/types/messaging';
 import { MessageType } from '@/types/messaging';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View, FlatList, ListRenderItem } from 'react-native';
+import { FlatList, KeyboardAvoidingView, ListRenderItem, Platform, StyleSheet, View } from 'react-native';
 
 export default function ChatScreen() {
   const { threadId, userId, userName } = useLocalSearchParams<{

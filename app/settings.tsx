@@ -8,6 +8,7 @@ import {
   Settings as SettingsIcon,
   HelpCircle,
   Info,
+  Package,
   ChevronRight
 } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -109,6 +110,17 @@ export default function Settings() {
         {/* Quick Actions */}
         <View style={styles.quickActions}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
+
+          <TouchableOpacity
+            style={styles.actionItem}
+            onPress={() => router.push('/(settings)/lost-item-complaint')}
+          >
+            <View style={styles.actionInfo}>
+              <Text style={styles.actionLabel}>Report Lost Item</Text>
+              <Text style={styles.actionDescription}>Report items lost during rides</Text>
+            </View>
+            <ChevronRight size={20} color="#9ca3af" />
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionItem}

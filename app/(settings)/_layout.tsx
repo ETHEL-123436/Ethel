@@ -25,9 +25,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="language-selection" options={{ title: 'Language Selection' }} />
       <Stack.Screen name="kyc-upload" options={{ title: 'KYC Verification' }} />
       <Stack.Screen name="become-driver" options={{ title: 'Become a Driver' }} />
-      {isDriver && (
-        <Stack.Screen name="driver-settings" options={{ title: 'Driver Settings' }} />
-      )}
+      <Stack.Screen name="lost-item-complaint" options={{ title: 'Report Lost Item' }} />
     </Stack>
   );
 }
