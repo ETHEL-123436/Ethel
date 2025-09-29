@@ -10,6 +10,45 @@ interface ThemeSettings {
   language: Language;
 }
 
+interface ThemeColors {
+  background: string;
+  surface: string;
+  primary: string;
+  secondary: string;
+  text: string;
+  textSecondary: string;
+  border: string;
+  error: string;
+  success: string;
+  warning: string;
+}
+
+const lightColors: ThemeColors = {
+  background: '#f8f9fa',
+  surface: '#ffffff',
+  primary: '#667eea',
+  secondary: '#764ba2',
+  text: '#333333',
+  textSecondary: '#666666',
+  border: '#e0e0e0',
+  error: '#f44336',
+  success: '#4CAF50',
+  warning: '#ff9800',
+};
+
+const darkColors: ThemeColors = {
+  background: '#121212',
+  surface: '#1e1e1e',
+  primary: '#8b7cf8',
+  secondary: '#a78bfa',
+  text: '#ffffff',
+  textSecondary: '#b3b3b3',
+  border: '#333333',
+  error: '#f87171',
+  success: '#68d391',
+  warning: '#fbbf24',
+};
+
 export const [ThemeProvider, useTheme] = createContextHook(() => {
   const [settings, setSettings] = useState<ThemeSettings>({
     theme: 'light',
@@ -17,22 +56,29 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Get the actual theme colors based on the selected theme
+  const getThemeColors = (): ThemeColors => {
+    const effectiveTheme = settings.theme === 'auto' ? 'light' : settings.theme;
+    return effectiveTheme === 'dark' ? darkColors : lightColors;
+  };
+
   useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const savedSettings = await AsyncStorage.getItem('themeSettings');
+        if (savedSettings) {
+          const parsed = JSON.parse(savedSettings);
+          setSettings(parsed);
+        }
+      } catch (error) {
+        console.error('Failed to load theme settings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     loadSettings();
   }, []);
-
-  const loadSettings = async () => {
-    try {
-      const savedSettings = await AsyncStorage.getItem('themeSettings');
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
-      }
-    } catch (error) {
-      console.error('Failed to load theme settings:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const updateTheme = async (theme: Theme) => {
     try {
@@ -54,8 +100,11 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     }
   };
 
+  const colors = getThemeColors();
+
   return {
-    settings,
+    settings: isLoading ? { theme: 'light', language: 'en' } : settings,
+    colors,
     isLoading,
     updateTheme,
     updateLanguage,

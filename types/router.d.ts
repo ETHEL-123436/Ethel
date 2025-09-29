@@ -12,7 +12,7 @@ declare module 'expo-router' {
     '/(settings)/help': true;
     '/(settings)/driver-settings': true;
     '/(settings)/profile': true;
-    '/(admin)/dashboard': true;
+    '/(admin)/dashboard-clean': true;
     '/(admin)/admin-settings': true;
     // Add other routes as needed
   }

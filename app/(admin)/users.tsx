@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Search, User, Shield, Ban, Trash2, Eye } from 'lucide-react-native';
 import { useAdmin } from '@/providers/admin-provider';
 
@@ -66,6 +66,14 @@ export default function AdminUsers() {
   const handleKycStatusChange = (userId: string, status: 'pending' | 'approved' | 'rejected') => {
     // For now, we'll use a placeholder KYC document ID - this should be updated to use actual KYC document ID
     updateKYCDocument('placeholder-doc-id', status);
+  };
+
+  const handleViewDetails = (user: any) => {
+    Alert.alert(
+      'User Details',
+      `Name: ${user.name}\nEmail: ${user.email}\nPhone: ${user.phone}\nRole: ${user.role}\nKYC Status: ${user.kycStatus || 'pending'}\nRating: ${user.rating?.toFixed(1) || 'N/A'}\nTotal Rides: ${user.totalRides || 0}\nWallet Balance: XAF ${user.walletBalance?.toLocaleString() || '0'}`,
+      [{ text: 'OK' }]
+    );
   };
 
   return (
@@ -198,7 +206,10 @@ export default function AdminUsers() {
                 )}
 
                 <View style={styles.userActions}>
-                  <TouchableOpacity style={styles.actionButton}>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => handleViewDetails(user)}
+                  >
                     <Eye size={16} color="#667eea" />
                     <Text style={styles.actionButtonText}>View Details</Text>
                   </TouchableOpacity>

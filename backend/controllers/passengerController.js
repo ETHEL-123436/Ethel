@@ -2,6 +2,9 @@ const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errorResponse');
 const User = require('../models/userModel');
 const KYCDocument = require('../models/kycDocumentModel');
+const { uploadToCloudinary } = require('../utils/cloudinaryUploader');
+
+
 
 // @desc    Submit passenger verification documents
 // @route   POST /api/passenger/verify
@@ -60,6 +63,67 @@ exports.submitPassengerVerification = asyncHandler(async (req, res, next) => {
       status: 'pending',
       submittedAt: verificationDoc.createdAt
     }
+  });
+});
+
+// @desc    Submit full KYC application
+// @route   POST /api/v1/users/submit-kyc
+// @access  Private
+exports.submitKycApplication = asyncHandler(async (req, res, next) => {
+  const { personalInfo, vehicleInfo, documents } = req.body;
+
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return next(new ErrorResponse('User not found', 404));
+  }
+
+  if (user.kycStatus === 'approved' || user.kycStatus === 'pending') {
+    return next(new ErrorResponse(`You cannot submit a new application with status: ${user.kycStatus}`, 400));
+  }
+
+  // In a real app, you would handle file uploads here.
+  // The files would be in req.files if using a middleware like 'express-fileupload' or 'multer'.
+  // For this example, we'll assume file URIs are passed in the 'documents' array.
+
+  // 1. Update User's personal info
+  user.name = personalInfo.fullName || user.name;
+  user.phone = personalInfo.phoneNumber || user.phone;
+  // You might want to add fields like dateOfBirth, address, etc., to your userModel
+
+  // 2. Update vehicle info if the user is a driver
+  if (user.role === 'driver' && vehicleInfo) {
+    user.vehicleInfo = {
+      make: vehicleInfo.make,
+      model: vehicleInfo.model,
+      year: vehicleInfo.year,
+      color: vehicleInfo.color,
+      plateNumber: vehicleInfo.plateNumber,
+    };
+  }
+
+  // 3. Create KYCDocument entries for uploaded documents
+  if (documents && documents.length > 0) {
+    const kycDocs = documents.map(doc => ({
+      userId: user._id,
+      documentType: doc.type,
+      // In a real app, you'd get the secure_url from a Cloudinary upload
+      documentImage: doc.uri, 
+      status: 'pending',
+    }));
+    await KYCDocument.insertMany(kycDocs);
+  }
+
+  // 4. Set user's KYC status to pending
+  user.kycStatus = 'pending';
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'KYC application submitted successfully. Review is in progress.',
+    data: {
+      userId: user._id,
+      kycStatus: user.kycStatus,
+    },
   });
 });
 
@@ -190,6 +254,7 @@ const simulateExnessVerification = async (verificationData) => {
 };
 
 module.exports = {
+  submitKycApplication: exports.submitKycApplication,
   submitPassengerVerification: exports.submitPassengerVerification,
   getPassengerVerificationStatus: exports.getPassengerVerificationStatus,
   uploadPassengerDocument: exports.uploadPassengerDocument,

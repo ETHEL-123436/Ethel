@@ -212,12 +212,44 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   };
 
-  const updateUser = async (updates: Partial<User>) => {
-    if (!user) return;
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user || !user.token) {
+      throw new Error('You must be logged in to update your profile.');
+    }
+    setIsLoading(true);
+    try {
+      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+      if (!API_BASE_URL) {
+        throw new Error('API_BASE_URL is not configured.');
+      }
 
-    const updatedUser = { ...user, ...updates };
-    await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-    setUser(updatedUser);
+      const response = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify(updates)
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseData.message || 'Failed to update profile.');
+      }
+
+      // The backend should return the updated user object
+      const updatedUser: User = { ...user, ...responseData.data };
+
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error; // Re-throw to be caught in the component
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return {
@@ -226,7 +258,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     login,
     register,
     logout,
-    updateUser,
+    updateProfile,
     isAuthenticated: !!user
   };
 });

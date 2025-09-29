@@ -1,4 +1,3 @@
-import type { Message, ConversationThread, UserStatusInfo } from '@/types/messaging';
 import { MessageType, MessageStatus, ConversationType, UserStatus } from '@/types/messaging';
 
 // Mock data for messaging system
@@ -86,7 +85,7 @@ export const mockThreads = [
     createdAt: new Date(Date.now() - 172800000),
     updatedAt: new Date(Date.now() - 7200000)
   }
-] as const;
+];
 
 export const mockUserStatuses = {
   'driver1': { 

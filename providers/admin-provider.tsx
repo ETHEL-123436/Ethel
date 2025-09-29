@@ -99,23 +99,38 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     // Add request interceptor for auth
     instance.interceptors.request.use(
       (config) => {
+        console.log('Making request to:', config.url);
+        console.log('User token exists:', !!user?.token);
+        console.log('Authorization header:', config.headers.Authorization ? 'Bearer [TOKEN]' : 'No token');
+
         if (user?.token) {
           config.headers.Authorization = `Bearer ${user.token}`;
         }
         return config;
       },
       (error) => {
+        console.error('Request interceptor error:', error);
         return Promise.reject(error);
       }
     );
 
     // Add response interceptor for error handling
     instance.interceptors.response.use(
-      (response: AxiosResponse) => response,
+      (response: AxiosResponse) => {
+        console.log('Response status:', response.status, 'for URL:', response.config.url);
+        return response;
+      },
       (error: AxiosError) => {
+        console.error('API Error:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          url: error.config?.url,
+          message: (error.response?.data as any)?.message || error.message
+        });
+
         if (error.response?.status === 401) {
           // Handle unauthorized access
-          console.error('Authentication error:', error);
+          console.error('Authentication error - token may be invalid or expired');
         }
         return Promise.reject(error);
       }

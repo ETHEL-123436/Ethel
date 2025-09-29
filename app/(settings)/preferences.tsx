@@ -5,11 +5,14 @@ import { ChevronRight, Settings } from 'lucide-react-native';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function PreferencesScreen() {
-  const { settings } = useTheme();
+  const { settings, colors, isLoading } = useTheme();
   const { user } = useAuth();
 
+  const currentTheme = settings?.theme || 'light';
+  const currentLanguage = settings?.language || 'en';
+
   const getThemeDisplayName = () => {
-    switch (settings.theme) {
+    switch (currentTheme) {
       case 'light': return 'Light';
       case 'dark': return 'Dark';
       case 'auto': return 'Auto';
@@ -18,7 +21,7 @@ export default function PreferencesScreen() {
   };
 
   const getLanguageDisplayName = () => {
-    switch (settings.language) {
+    switch (currentLanguage) {
       case 'en': return 'English';
       case 'es': return 'Español';
       case 'fr': return 'Français';
@@ -29,95 +32,103 @@ export default function PreferencesScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: 'Preferences' }} />
 
-      <View style={styles.header}>
-        <Settings size={24} color="#667eea" />
-        <Text style={styles.title}>Preferences</Text>
-        <Text style={styles.subtitle}>Customize your app experience</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>App Settings</Text>
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => router.push('/(settings)/theme-selection')}
-        >
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuText}>Theme</Text>
-            <View style={styles.menuItemRight}>
-              <Text style={styles.menuValue}>{getThemeDisplayName()}</Text>
-              <ChevronRight size={20} color="#999" />
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => router.push('/(settings)/language-selection')}
-        >
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuText}>Language</Text>
-            <View style={styles.menuItemRight}>
-              <Text style={styles.menuValue}>{getLanguageDisplayName()}</Text>
-              <ChevronRight size={20} color="#999" />
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => router.push('/(settings)/notifications')}
-        >
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuText}>Notifications</Text>
-            <ChevronRight size={20} color="#999" />
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* Passenger-specific preferences */}
-      {user?.role === 'passenger' && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ride Preferences</Text>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>Preferred Vehicle Type</Text>
-            <ChevronRight size={20} color="#999" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>Payment Methods</Text>
-            <ChevronRight size={20} color="#999" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>Ride History</Text>
-            <ChevronRight size={20} color="#999" />
-          </TouchableOpacity>
+      {isLoading ? (
+        <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+          <Text style={{ color: colors.text }}>Loading preferences...</Text>
         </View>
-      )}
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => router.push('/(settings)/privacy')}
-        >
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuText}>Privacy Settings</Text>
-            <ChevronRight size={20} color="#999" />
+      ) : (
+        <>
+          <View style={[styles.header, { backgroundColor: colors.surface }]}>
+            <Settings size={24} color={colors.primary} />
+            <Text style={[styles.title, { color: colors.text }]}>Preferences</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Customize your app experience</Text>
           </View>
-        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuText}>Data & Storage</Text>
-          <ChevronRight size={20} color="#999" />
-        </TouchableOpacity>
-      </View>
+          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>App Settings</Text>
+
+            <TouchableOpacity
+              style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
+              onPress={() => router.push('/(settings)/theme-selection')}
+            >
+              <View style={styles.menuItemContent}>
+                <Text style={[styles.menuText, { color: colors.text }]}>Theme</Text>
+                <View style={styles.menuItemRight}>
+                  <Text style={[styles.menuValue, { color: colors.textSecondary }]}>{getThemeDisplayName()}</Text>
+                  <ChevronRight size={20} color={colors.textSecondary} />
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
+              onPress={() => router.push('/(settings)/language-selection')}
+            >
+              <View style={styles.menuItemContent}>
+                <Text style={[styles.menuText, { color: colors.text }]}>Language</Text>
+                <View style={styles.menuItemRight}>
+                  <Text style={[styles.menuValue, { color: colors.textSecondary }]}>{getLanguageDisplayName()}</Text>
+                  <ChevronRight size={20} color={colors.textSecondary} />
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
+              onPress={() => router.push('/(settings)/notifications')}
+            >
+              <View style={styles.menuItemContent}>
+                <Text style={[styles.menuText, { color: colors.text }]}>Notifications</Text>
+                <ChevronRight size={20} color={colors.textSecondary} />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Passenger-specific preferences */}
+          {user?.role === 'passenger' && (
+            <View style={[styles.section, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Ride Preferences</Text>
+
+              <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+                <Text style={[styles.menuText, { color: colors.text }]}>Preferred Vehicle Type</Text>
+                <ChevronRight size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+                <Text style={[styles.menuText, { color: colors.text }]}>Payment Methods</Text>
+                <ChevronRight size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+                <Text style={[styles.menuText, { color: colors.text }]}>Ride History</Text>
+                <ChevronRight size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Account</Text>
+
+            <TouchableOpacity
+              style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
+              onPress={() => router.push('/(settings)/privacy')}
+            >
+              <View style={styles.menuItemContent}>
+                <Text style={[styles.menuText, { color: colors.text }]}>Privacy Settings</Text>
+                <ChevronRight size={20} color={colors.textSecondary} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+              <Text style={[styles.menuText, { color: colors.text }]}>Data & Storage</Text>
+              <ChevronRight size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -126,6 +137,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     padding: 20,

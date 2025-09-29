@@ -1,6 +1,4 @@
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
-import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
+import { MapPin, Phone, Send } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
@@ -75,7 +73,7 @@ export function MessageInput({
             onPress={handleShareLocation}
             disabled={disabled}
           >
-            <LocationOnOutlinedIcon style={styles.quickActionIcon} />
+            <MapPin size={18} color="#667eea" />
           </TouchableOpacity>
           
           {onCall && (
@@ -84,7 +82,7 @@ export function MessageInput({
               onPress={onCall}
               disabled={disabled}
             >
-              <PhoneOutlinedIcon style={styles.quickActionIcon} />
+              <Phone size={18} color="#667eea" />
             </TouchableOpacity>
           )}
         </View>
@@ -110,11 +108,9 @@ export function MessageInput({
           onPress={handleSend}
           disabled={!message.trim() || disabled}
         >
-          <SendOutlinedIcon 
-            style={[
-              styles.sendIcon,
-              { color: message.trim() && !disabled ? 'white' : '#ccc' }
-            ]} 
+          <Send 
+            size={20}
+            color={message.trim() && !disabled ? 'white' : '#ccc'}
           />
         </TouchableOpacity>
       </View>
@@ -178,3 +174,5 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
 });
+
+export default MessageInput;

@@ -11,22 +11,22 @@ const themes = [
 ];
 
 export default function ThemeSelectionScreen() {
-  const { settings, updateTheme } = useTheme();
+  const { settings, colors, updateTheme } = useTheme();
 
   const handleThemeSelect = async (theme: typeof themes[0]['key']) => {
     await updateTheme(theme);
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: 'Theme' }} />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#667eea" />
+          <ChevronLeft size={24} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Choose Theme</Text>
-        <Text style={styles.subtitle}>Select your preferred theme</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Choose Theme</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Select your preferred theme</Text>
       </View>
 
       <View style={styles.options}>
@@ -35,7 +35,8 @@ export default function ThemeSelectionScreen() {
             key={theme.key}
             style={[
               styles.option,
-              settings.theme === theme.key && styles.optionSelected
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              settings?.theme === theme.key && [styles.optionSelected, { backgroundColor: colors.primary + '10', borderColor: colors.primary }]
             ]}
             onPress={() => handleThemeSelect(theme.key)}
           >
@@ -43,19 +44,21 @@ export default function ThemeSelectionScreen() {
               <View>
                 <Text style={[
                   styles.optionTitle,
-                  settings.theme === theme.key && styles.optionTitleSelected
+                  { color: colors.text },
+                  settings?.theme === theme.key && [styles.optionTitleSelected, { color: colors.primary }]
                 ]}>
                   {theme.title}
                 </Text>
                 <Text style={[
                   styles.optionDescription,
-                  settings.theme === theme.key && styles.optionDescriptionSelected
+                  { color: colors.textSecondary },
+                  settings?.theme === theme.key && [styles.optionDescriptionSelected, { color: colors.primary }]
                 ]}>
                   {theme.description}
                 </Text>
               </View>
-              {settings.theme === theme.key && (
-                <Check size={20} color="#667eea" />
+              {settings?.theme === theme.key && (
+                <Check size={20} color={colors.primary} />
               )}
             </View>
           </TouchableOpacity>

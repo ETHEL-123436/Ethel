@@ -4,6 +4,11 @@ import { useAuth } from '@/providers/auth-provider';
 
 export default function SettingsLayout() {
   const { user } = useAuth();
+
+  if (!user) {
+    return null; // or return a loading screen
+  }
+
   const isDriver = user?.role === 'driver';
 
   return (

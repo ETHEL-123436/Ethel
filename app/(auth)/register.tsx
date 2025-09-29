@@ -1,9 +1,9 @@
+import { useAuth } from "@/providers/auth-provider";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAuth } from "@/providers/auth-provider";
 
 export default function RegisterScreen() {
   const { role } = useLocalSearchParams<{ role: 'driver' | 'passenger' }>();
@@ -20,22 +20,26 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!formData.name || !formData.email || !formData.phone || !formData.password) {
+      Alert.alert('Missing Information', 'Please fill out all fields.');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
+      Alert.alert('Password Mismatch', 'The passwords do not match.');
       return;
     }
 
     if (formData.password.length < 6) {
+      Alert.alert('Weak Password', 'Password must be at least 6 characters long.');
       return;
     }
 
     try {
       await register(formData.name, formData.email, formData.phone, formData.password, role || 'passenger');
       router.replace("/(tabs)/home");
-    } catch {
-      // Handle error silently
+    } catch (error) {
+      console.error('Registration error:', error);
+      Alert.alert('Registration Failed', error instanceof Error ? error.message : 'An unknown error occurred.');
     }
   };
 

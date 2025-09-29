@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
 import { useAuth } from '@/providers/auth-provider';
-import { User, ArrowLeft, Camera } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { ArrowLeft, Camera, User } from 'lucide-react-native';
+import { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -44,7 +44,10 @@ export default function ProfileScreen() {
           <View style={styles.avatar}>
             <User size={48} color="#9ca3af" />
           </View>
-          <TouchableOpacity style={styles.changePhotoButton}>
+          <TouchableOpacity 
+            style={styles.changePhotoButton}
+            onPress={() => Alert.alert('Unimplemented', 'Change photo functionality is not yet implemented.')}
+          >
             <Camera size={16} color="#4f46e5" />
             <Text style={styles.changePhotoText}>Change Photo</Text>
           </TouchableOpacity>

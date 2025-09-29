@@ -41,10 +41,10 @@ interface KYCDocument {
   status: 'pending' | 'uploaded' | 'approved' | 'rejected';
 }
 
-type FormStep = 'personal' | 'vehicle' | 'vehicle_photos' | 'documents' | 'review';
+type FormStep = 'personal' | 'vehicle' | 'documents' | 'review';
 
 export default function KYCUploadScreen() {
-  const { user, updateUser } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [currentStep, setCurrentStep] = useState<FormStep>('personal');
   const [isDriver] = useState(user?.role === 'driver');
 
@@ -107,13 +107,14 @@ export default function KYCUploadScreen() {
     }
   ]);
 
+  const totalSteps = isDriver ? 4 : 3;
+
   const getStepNumber = (step: FormStep) => {
     switch (step) {
       case 'personal': return 1;
       case 'vehicle': return 2;
-      case 'vehicle_photos': return 3;
-      case 'documents': return 4;
-      case 'review': return 5;
+      case 'documents': return isDriver ? 3 : 2;
+      case 'review': return isDriver ? 4 : 3;
       default: return 1;
     }
   };
@@ -122,8 +123,7 @@ export default function KYCUploadScreen() {
     switch (step) {
       case 'personal': return 'Personal Information';
       case 'vehicle': return 'Vehicle Information';
-      case 'vehicle_photos': return 'Vehicle Photos';
-      case 'documents': return 'Document Upload';
+      case 'documents': return isDriver ? 'Documents & Photos' : 'Document Upload';
       case 'review': return 'Review & Submit';
       default: return 'Personal Information';
     }
@@ -135,13 +135,13 @@ export default function KYCUploadScreen() {
         return personalInfo.fullName && personalInfo.phoneNumber && personalInfo.dateOfBirth && personalInfo.address;
       case 'vehicle':
         return isDriver ? (vehicleInfo.make && vehicleInfo.model && vehicleInfo.year && vehicleInfo.plateNumber) : true;
-      case 'vehicle_photos':
-        return isDriver ? (vehiclePhotos.front && vehiclePhotos.side && vehiclePhotos.back && vehiclePhotos.inside && vehiclePhotos.plate) : true;
       case 'documents':
+        if (isDriver) {
+          return vehiclePhotos.front && vehiclePhotos.side && vehiclePhotos.back && vehiclePhotos.inside && vehiclePhotos.plate && documents.filter(doc => doc.required).every(doc => doc.status === 'uploaded');
+        }
         const requiredDocs = documents.filter(doc => doc.required);
         return requiredDocs.every(doc => doc.status === 'uploaded');
       case 'review':
-        return true;
       default:
         return false;
     }
@@ -158,9 +158,6 @@ export default function KYCUploadScreen() {
         setCurrentStep(isDriver ? 'vehicle' : 'documents');
         break;
       case 'vehicle':
-        setCurrentStep('vehicle_photos');
-        break;
-      case 'vehicle_photos':
         setCurrentStep('documents');
         break;
       case 'documents':
@@ -176,11 +173,8 @@ export default function KYCUploadScreen() {
       case 'vehicle':
         setCurrentStep('personal');
         break;
-      case 'vehicle_photos':
-        setCurrentStep('vehicle');
-        break;
       case 'documents':
-        setCurrentStep(isDriver ? 'vehicle_photos' : 'personal');
+        setCurrentStep(isDriver ? 'vehicle' : 'personal');
         break;
       case 'review':
         setCurrentStep('documents');
@@ -266,23 +260,13 @@ export default function KYCUploadScreen() {
   };
 
   const submitDocuments = async () => {
+    if (!user?.token) {
+      Alert.alert('Error', 'You must be logged in to submit an application.');
+      return;
+    }
+
     try {
-      // Here you would submit all the form data to your backend
-      const formData = {
-        personalInfo,
-        vehicleInfo: isDriver ? vehicleInfo : null,
-        vehiclePhotos: isDriver ? vehiclePhotos : null,
-        documents: documents.filter(doc => doc.status === 'uploaded'),
-        submittedAt: new Date().toISOString()
-      };
-
-      console.log('Submitting KYC form:', formData);
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Update user KYC status
-      await updateUser({ kycStatus: 'pending' });
+      await updateProfile({ kycStatus: 'pending' });
 
       Alert.alert(
         'Application Submitted!',
@@ -292,7 +276,7 @@ export default function KYCUploadScreen() {
         ]
       );
     } catch (error) {
-      console.error('Error submitting application:', error);
+      console.error('Error submitting application:', error instanceof Error ? error.message : String(error));
       Alert.alert('Error', 'Failed to submit application. Please try again.');
     }
   };
@@ -444,11 +428,13 @@ export default function KYCUploadScreen() {
     </View>
   );
 
-  const renderDocumentsStep = () => (
+  const renderDocumentsAndPhotosStep = () => (
     <View style={styles.stepContent}>
       <Text style={styles.stepDescription}>
         Upload clear photos of your required documents
       </Text>
+
+      {isDriver && renderVehiclePhotosStep()}
 
       {documents.filter(doc => doc.required).map((document) => (
         <View key={document.type} style={styles.documentCard}>
@@ -628,10 +614,8 @@ export default function KYCUploadScreen() {
         return renderPersonalInfoStep();
       case 'vehicle':
         return renderVehicleInfoStep();
-      case 'vehicle_photos':
-        return renderVehiclePhotosStep();
       case 'documents':
-        return renderDocumentsStep();
+        return renderDocumentsAndPhotosStep();
       case 'review':
         return renderReviewStep();
       default:
@@ -647,7 +631,7 @@ export default function KYCUploadScreen() {
           {/* Progress Indicator */}
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
-              {[1, 2, 3, 4, 5].map((step) => (
+              {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
                 <View key={step} style={styles.progressStep}>
                   <View style={[
                     styles.progressCircle,
@@ -660,7 +644,7 @@ export default function KYCUploadScreen() {
                       {step}
                     </Text>
                   </View>
-                  {step < 5 && <View style={[
+                  {step < totalSteps && <View style={[
                     styles.progressLine,
                     step < getStepNumber(currentStep) && styles.progressLineActive
                   ]} />}
@@ -717,7 +701,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  progressBar: {
+    progressBar: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
@@ -751,7 +735,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 2,
     backgroundColor: '#e0e0e0',
-    marginHorizontal: 12,
+    marginHorizontal: 24,
   },
   progressLineActive: {
     backgroundColor: '#667eea',
@@ -971,8 +955,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 8,
-    gap: 8,
-    flex: 1,
+    gap: 8
   },
   submitButtonText: {
     fontSize: 18,

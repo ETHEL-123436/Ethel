@@ -23,7 +23,7 @@ export default function AdminLoginScreen() {
     try {
       const user = await login(trimmedEmail, password, 'admin');
       if (user.role === 'admin') {
-        router.replace("/(admin)/dashboard");
+        router.replace("/(admin)/dashboard-clean");
       } else {
         Alert.alert('Access Denied', 'You do not have admin privileges');
         // Optionally logout or stay

@@ -13,22 +13,22 @@ const languages = [
 ];
 
 export default function LanguageSelectionScreen() {
-  const { settings, updateLanguage } = useTheme();
+  const { settings, colors, updateLanguage } = useTheme();
 
   const handleLanguageSelect = async (language: typeof languages[0]['key']) => {
     await updateLanguage(language);
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: 'Language' }} />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#667eea" />
+          <ChevronLeft size={24} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Choose Language</Text>
-        <Text style={styles.subtitle}>Select your preferred language</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Choose Language</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Select your preferred language</Text>
       </View>
 
       <View style={styles.options}>
@@ -37,7 +37,8 @@ export default function LanguageSelectionScreen() {
             key={language.key}
             style={[
               styles.option,
-              settings.language === language.key && styles.optionSelected
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              settings?.language === language.key && [styles.optionSelected, { backgroundColor: colors.primary + '10', borderColor: colors.primary }]
             ]}
             onPress={() => handleLanguageSelect(language.key)}
           >
@@ -45,19 +46,21 @@ export default function LanguageSelectionScreen() {
               <View>
                 <Text style={[
                   styles.optionTitle,
-                  settings.language === language.key && styles.optionTitleSelected
+                  { color: colors.text },
+                  settings?.language === language.key && [styles.optionTitleSelected, { color: colors.primary }]
                 ]}>
                   {language.title}
                 </Text>
                 <Text style={[
                   styles.optionNativeName,
-                  settings.language === language.key && styles.optionNativeNameSelected
+                  { color: colors.textSecondary },
+                  settings?.language === language.key && [styles.optionNativeNameSelected, { color: colors.primary }]
                 ]}>
                   {language.nativeName}
                 </Text>
               </View>
-              {settings.language === language.key && (
-                <Check size={20} color="#667eea" />
+              {settings?.language === language.key && (
+                <Check size={20} color={colors.primary} />
               )}
             </View>
           </TouchableOpacity>

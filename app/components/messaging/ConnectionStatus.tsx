@@ -1,8 +1,7 @@
-import NetworkWifi3BarOutlinedIcon from '@mui/icons-material/NetworkWifi3BarOutlined';
-import SignalWifiStatusbarNullOutlinedIcon from '@mui/icons-material/SignalWifiStatusbarNullOutlined';
+import { Wifi, WifiOff } from 'lucide-react-native';
 import { ConnectionStatus as Status } from '@/types/messaging';
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 
 interface ConnectionStatusProps {
   status: Status;
@@ -49,19 +48,19 @@ export function ConnectionStatus({ status, visible = true }: ConnectionStatusPro
         return {
           text: 'Connecting...',
           color: '#ff9800',
-          icon: <NetworkWifi3BarOutlinedIcon style={styles.icon} />
+          icon: <Wifi size={16} color="white" />
         };
       case Status.RECONNECTING:
         return {
           text: 'Reconnecting...',
           color: '#ff9800',
-          icon: <NetworkWifi3BarOutlinedIcon style={styles.icon} />
+          icon: <Wifi size={16} color="white" />
         };
       case Status.DISCONNECTED:
         return {
           text: 'Disconnected',
           color: '#f44336',
-          icon: <SignalWifiStatusbarNullOutlinedIcon style={styles.icon} />
+          icon: <WifiOff size={16} color="white" />
         };
       default:
         return null;
@@ -87,18 +86,18 @@ export function ConnectionStatus({ status, visible = true }: ConnectionStatusPro
     >
       <View style={styles.content}>
         {config.icon}
-        <Text style={styles.text}>{config.text}</Text>
       </View>
     </Animated.View>
   );
 }
+
+export default ConnectionStatus;
 
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
     zIndex: 1000,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -108,10 +107,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-  },
-  icon: {
-    fontSize: 16,
-    color: 'white',
   },
   text: {
     color: 'white',

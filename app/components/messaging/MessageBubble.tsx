@@ -1,11 +1,7 @@
 import type { Message } from '@/types/messaging';
 import { MessageStatus, MessageType } from '@/types/messaging';
 import { formatMessageTime } from '@/utils/messageFormatters';
-import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import DoneOutlinedIcon from '@mui/icons-material/DoneOutlined';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
-import { User } from 'lucide-react-native';
+import { CheckCircle, MapPin, User } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -29,11 +25,11 @@ export function MessageBubble({
   const getStatusIcon = () => {
     switch (message.status) {
       case MessageStatus.SENT:
-        return <DoneOutlinedIcon style={styles.statusIcon} />;
+        return <User size={12} color="rgba(255, 255, 255, 0.7)" />;
       case MessageStatus.DELIVERED:
-        return <DoneOutlinedIcon style={styles.statusIcon} />;
+        return <User size={12} color="rgba(255, 255, 255, 0.7)" />;
       case MessageStatus.READ:
-        return <CheckCircleOutlinedIcon style={styles.statusIconRead} />;
+        return <CheckCircle size={12} color="#4caf50" />;
       case MessageStatus.FAILED:
         return (
           <TouchableOpacity onPress={onRetry}>
@@ -50,7 +46,7 @@ export function MessageBubble({
       case MessageType.LOCATION:
         return (
           <View style={styles.locationContent}>
-            <LocationOnOutlinedIcon style={styles.locationIcon} />
+            <MapPin size={16} color="currentColor" />
             <Text style={[
               styles.messageText,
               isOwn ? styles.ownMessageText : styles.otherMessageText
@@ -305,3 +301,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+export default MessageBubble;

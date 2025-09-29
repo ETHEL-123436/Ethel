@@ -6,7 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function RidesScreen() {
   const { rides } = useAdmin();
-  const [searchQuery, setSearchQuery] = useState('');  const [selectedStatus, setSelectedStatus] = useState('all');  const insets = useSafeAreaInsets();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const insets = useSafeAreaInsets();
 
   const getStatusColor = (status: string) => {
     switch (status) {

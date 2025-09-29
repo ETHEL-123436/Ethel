@@ -3,14 +3,21 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "bunx rork start -p grfvjkm2dd3t018keu18t --tunnel",
-    "start-web": "bunx rork start -p grfvjkm2dd3t018keu18t --web --tunnel",
-    "start-web-dev": "DEBUG=expo* bunx rork start -p grfvjkm2dd3t018keu18t --web --tunnel",
+    "start": "set NODE_OPTIONS=--max-old-space-size=4096 & npx expo start --tunnel",
+    "start:dev": "set NODE_OPTIONS=--max-old-space-size=4096 & set EXPO_DEBUG=true & npx expo start --tunnel",
+    "start-web": "set NODE_OPTIONS=--max-old-space-size=4096 & npx expo start --web --tunnel",
+    "start-web-dev": "set NODE_OPTIONS=--max-old-space-size=4096 & set DEBUG=expo* & npx expo start --web --tunnel",
     "lint": "expo lint",
-    "test": "node tests/geoutils.test.js"
+    "test": "node tests/geoutils.test.js",
+    "clean": "npx expo start -c"
   },
   "dependencies": {
+    "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@expo/vector-icons": "^14.1.0",
+    "@mui/icons-material": "^7.3.2",
+    "@mui/material": "^7.3.2",
     "@nkzw/create-context-hook": "^1.1.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",

@@ -2,8 +2,8 @@ import { ConnectionStatus as ConnectionStatusBanner } from '@/app/components/mes
 import { MessageBubble } from '@/app/components/messaging/MessageBubble';
 import { MessageInput } from '@/app/components/messaging/MessageInput';
 import { TypingIndicator } from '@/app/components/messaging/TypingIndicator';
-import { UserStatus } from '@/app/components/messaging/UserStatus';
 import { useAuth } from '@/providers/auth-provider';
+import { useTheme } from '@/providers/theme-provider';
 import { useMessaging } from '@/providers/messaging-provider';
 import type { Message } from '@/types/messaging';
 import { MessageType } from '@/types/messaging';
@@ -19,6 +19,7 @@ export default function ChatScreen() {
   }>();
 
   const { user } = useAuth();
+  const { colors } = useTheme();
   const {
     messages,
     sendMessage,
@@ -33,7 +34,7 @@ export default function ChatScreen() {
   } = useMessaging();
 
   const [currentThreadId, setCurrentThreadId] = useState<string | undefined>(threadId);
-  const flatListRef = useRef<FlatList<Message>>(null);
+  const flatListRef = useRef<FlatList<Message> & { scrollToEnd?: (params: { animated?: boolean }) => void }>(null);
 
   const currentMessages: Message[] = useMemo(() => {
     return currentThreadId ? messages[currentThreadId] || [] : [];
@@ -52,6 +53,8 @@ export default function ChatScreen() {
       // Create a new thread if none was provided
       createThread({ participantId: userId }).then(thread => {
         setCurrentThreadId(thread.id);
+      }).catch(error => {
+        console.error('Failed to create thread:', error);
       });
     }
   }, [currentThreadId, userId, user, createThread]);
@@ -78,7 +81,6 @@ export default function ChatScreen() {
   // Keep list scrolled to bottom on new content
   useEffect(() => {
     const timeout = setTimeout(() => {
-      // @ts-expect-error scrollToEnd exists on underlying ScrollView
       flatListRef.current?.scrollToEnd?.({ animated: true });
     }, 100);
     return () => clearTimeout(timeout);
@@ -125,7 +127,7 @@ export default function ChatScreen() {
         }}
       />
 
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ConnectionStatusBanner status={connectionStatus} />
 
         <KeyboardAvoidingView
@@ -141,7 +143,7 @@ export default function ChatScreen() {
             contentContainerStyle={styles.messagesContent}
           />
 
-          <View style={styles.footer}>
+          <View style={[styles.footer, { backgroundColor: colors.surface }]}>
             <TypingIndicator users={typingUsers} visible={typingUsers.length > 0} />
             <MessageInput
               onSendMessage={handleSendMessage}
