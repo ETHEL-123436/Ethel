@@ -6,32 +6,39 @@ const kycDocumentSchema = new mongoose.Schema({
     ref: 'User',
     required: [true, 'User ID is required']
   },
-  documentType: {
-    type: String,
-    enum: ['passport', 'driver_license', 'national_id', 'vehicle_registration'],
-    required: [true, 'Document type is required']
+  // Personal Information
+  personalInfo: {
+    fullName: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
+    dateOfBirth: { type: String, required: true },
+    address: { type: String, required: true },
+    city: { type: String, required: true },
+    emergencyContact: { type: String },
+    emergencyPhone: { type: String }
   },
-  documentNumber: {
-    type: String,
-    required: [true, 'Document number is required']
+  // Vehicle Information (for drivers only)
+  vehicleInfo: {
+    make: String,
+    model: String,
+    year: String,
+    color: String,
+    plateNumber: String,
+    licenseNumber: String
   },
-  documentImage: {
-    type: String,
-    required: [true, 'Document image is required']
-  },
-  verificationData: {
-    type: Object,
-    verificationMethod: {
-      type: String,
-      enum: ['exness', 'manual', 'third_party'],
-      default: 'manual'
-    },
-    submittedAt: Date,
-    ipAddress: String,
-    userAgent: String,
-    confidence: Number,
-    riskScore: String,
-    externalVerificationId: String
+  // Documents array
+  documents: [{
+    type: { type: String, enum: ['passport', 'drivers_license', 'national_id', 'vehicle_registration'] },
+    title: String,
+    uri: String,
+    status: { type: String, enum: ['pending', 'uploaded', 'approved', 'rejected'], default: 'uploaded' }
+  }],
+  // Vehicle Photos (for drivers only)
+  vehiclePhotos: {
+    front: String,
+    side: String,
+    back: String,
+    inside: String,
+    plate: String
   },
   status: {
     type: String,

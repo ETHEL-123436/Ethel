@@ -2,37 +2,39 @@ import { Tabs } from "expo-router";
 import { Home, Search, MessageCircle, User, Car, Plus } from "lucide-react-native";
 import React from "react";
 import { useAuth } from "@/providers/auth-provider";
+import { useTheme } from "@/providers/theme-provider";
 
 export default function TabLayout() {
   const { user } = useAuth();
+  const { colors, t } = useTheme();
   const isDriver = user?.role === 'driver';
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#667eea',
-        tabBarInactiveTintColor: '#999',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: 'white',
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#f0f0f0',
+          borderTopColor: colors.border,
         },
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: t('home'),
           tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
         }}
       />
-      
+
       {isDriver ? (
         <Tabs.Screen
           name="rides"
           options={{
-            title: "My Rides",
+            title: t('totalRides'),
             tabBarIcon: ({ color, size }) => <Car color={color} size={size} />,
           }}
         />
@@ -40,7 +42,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="search"
           options={{
-            title: "Search",
+            title: t('search'),
             tabBarIcon: ({ color, size }) => <Search color={color} size={size} />,
           }}
         />
@@ -49,7 +51,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="bookings"
         options={{
-          title: "Bookings",
+          title: t('bookings'),
           tabBarIcon: ({ color, size }) => <Plus color={color} size={size} />,
         }}
       />
@@ -57,7 +59,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="messages"
         options={{
-          title: "Messages",
+          title: t('messages'),
           tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
         }}
       />
@@ -65,7 +67,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t('profile'),
           tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
         }}
       />

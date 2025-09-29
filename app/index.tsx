@@ -1,45 +1,72 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Car, Users, Shield, Clock } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/providers/auth-provider";
+import { useTheme } from "@/providers/theme-provider";
 
 export default function WelcomeScreen() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { colors, t } = useTheme();
   const insets = useSafeAreaInsets();
+  const [hasSeenLanding, setHasSeenLanding] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    const checkFirstLaunch = async () => {
+      try {
+        const seen = await AsyncStorage.getItem('hasSeenLanding');
+        setHasSeenLanding(seen === 'true');
+      } catch (error) {
+        setHasSeenLanding(false);
+      }
+    };
+
+    checkFirstLaunch();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && hasSeenLanding) {
       router.replace("/(tabs)/home");
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, hasSeenLanding]);
 
-  if (isLoading) {
+  const handleGetStarted = async () => {
+    await AsyncStorage.setItem('hasSeenLanding', 'true');
+    router.push("/(auth)/role-selection");
+  };
+
+  const handleSignIn = async () => {
+    await AsyncStorage.setItem('hasSeenLanding', 'true');
+    router.push("/(auth)/login");
+  };
+
+  if (isLoading || hasSeenLanding === null) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.loadingText, { color: colors.text }]}>{t('loading')}...</Text>
       </View>
     );
   }
 
   return (
     <LinearGradient
-      colors={['#667eea', '#764ba2']}
+      colors={[colors.primary, colors.secondary]}
       style={styles.container}
     >
       <View style={[styles.content, { paddingTop: insets.top + 80 }]}>
         <View style={styles.header}>
           <Car size={60} color="white" />
           <Text style={styles.title}>RideShare</Text>
-          <Text style={styles.subtitle}>Your journey, our priority</Text>
+          <Text style={styles.subtitle}>{t('yourJourney')}</Text>
         </View>
 
         <View style={styles.features}>
           <View style={styles.feature}>
             <Users size={24} color="white" />
-            <Text style={styles.featureText}>Connect with trusted drivers</Text>
+            <Text style={styles.featureText}>{t('connectDrivers')}</Text>
           </View>
           <View style={styles.feature}>
             <Shield size={24} color="white" />

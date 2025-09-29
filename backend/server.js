@@ -12,6 +12,7 @@ const rideRoutes = require('./routes/rideRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const passengerRoutes = require('./routes/passengerRoutes');
+const kycRoutes = require('./routes/kycRoutes');
 
 // Import WebSocket functionality
 const websocketServer = require('./websocket');
@@ -53,7 +54,7 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increase limit for JSON payloads
 
 // Logging in development
 if (process.env.NODE_ENV === 'development') {
@@ -64,6 +65,7 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/rides', rideRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
+app.use('/api/v1/kyc', express.json({ limit: '100mb' }), kycRoutes); // Higher limit specifically for KYC uploads
 app.use('/api/admin', adminRoutes);
 app.use('/api/passenger', passengerRoutes);
 
@@ -113,9 +115,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000; // Server port configuration
+const HOST = process.env.HOST || '0.0.0.0'; // Listen on all interfaces for mobile access
 
-server.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on ${HOST}:${PORT}`);
   console.log(`WebSocket server ready for real-time messaging`);
+  console.log(`Access from mobile: http://${require('os').networkInterfaces()['Wi-Fi 2']?.find(iface => iface.family === 'IPv4')?.address || 'YOUR_IP'}:${PORT}`);
 });

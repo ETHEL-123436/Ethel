@@ -223,8 +223,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         throw new Error('API_BASE_URL is not configured.');
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
-        method: 'PATCH',
+      const response = await fetch(`${API_BASE_URL}/api/v1/users/updatedetails`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${user.token}`

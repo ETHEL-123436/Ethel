@@ -1,9 +1,10 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState } from 'react';
-import { ArrowLeft, Car, Clock, CreditCard, MapPin, Settings as SettingsIcon, User } from 'lucide-react-native';
+import { ArrowLeft, Car, Clock, CreditCard, MapPin, Settings as SettingsIcon, User, Palette, Globe } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { Switch } from 'react-native-gesture-handler';
+import { useTheme } from '@/providers/theme-provider';
 
 type DriverSetting = {
   id: string;
@@ -17,6 +18,7 @@ type DriverSetting = {
 
 export default function DriverSettingsScreen() {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const [settings, setSettings] = useState<DriverSetting[]>([
     {
       id: 'auto_accept',
@@ -58,6 +60,22 @@ export default function DriverSettingsScreen() {
       type: 'navigation',
       route: '/(settings)/driver-profile',
     },
+    {
+      id: 'theme',
+      title: 'Theme',
+      description: 'Choose your preferred app theme',
+      icon: <Palette size={20} color="#4f46e5" />,
+      type: 'navigation',
+      route: '/(settings)/theme-selection',
+    },
+    {
+      id: 'language',
+      title: 'Language',
+      description: 'Select your preferred language',
+      icon: <Globe size={20} color="#4f46e5" />,
+      type: 'navigation',
+      route: '/(settings)/language-selection',
+    },
   ]);
 
   const toggleSetting = (id: string) => {
@@ -78,44 +96,44 @@ export default function DriverSettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#1f2937" />
+          <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Driver Settings</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Driver Settings</Text>
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={[styles.scrollView, { backgroundColor: colors.background }]}>
         <View style={styles.statusCard}>
           <View style={styles.statusIcon}>
             <Car size={24} color="#ffffff" />
           </View>
           <View style={styles.statusContent}>
-            <Text style={styles.statusTitle}>Driver Mode</Text>
-            <Text style={styles.statusSubtitle}>
-              {settings.find(s => s.id === 'availability')?.value 
-                ? 'You are currently online and receiving ride requests' 
+            <Text style={[styles.statusTitle, { color: '#ffffff' }]}>Driver Mode</Text>
+            <Text style={[styles.statusSubtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+              {settings.find(s => s.id === 'availability')?.value
+                ? 'You are currently online and receiving ride requests'
                 : 'You are currently offline and not receiving ride requests'}
             </Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Driver Preferences</Text>
-          <View style={styles.settingsList}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Driver Preferences</Text>
+          <View style={[styles.settingsList, { backgroundColor: colors.surface }]}>
             {settings.map((setting) => (
               <TouchableOpacity
                 key={setting.id}
-                style={styles.settingItem}
+                style={[styles.settingItem, { borderBottomColor: colors.border }]}
                 onPress={() => handleSettingPress(setting)}
                 activeOpacity={0.7}
               >
                 <View style={styles.settingIcon}>{setting.icon}</View>
                 <View style={styles.settingInfo}>
-                  <Text style={styles.settingTitle}>{setting.title}</Text>
-                  <Text style={styles.settingDescription}>{setting.description}</Text>
+                  <Text style={[styles.settingTitle, { color: colors.text }]}>{setting.title}</Text>
+                  <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>{setting.description}</Text>
                 </View>
                 {setting.type === 'toggle' ? (
                   <Switch
@@ -125,16 +143,16 @@ export default function DriverSettingsScreen() {
                     value={setting.value}
                   />
                 ) : (
-                  <ArrowLeft size={20} color="#9ca3af" style={{ transform: [{ rotate: '180deg' }] }} />
+                  <ArrowLeft size={20} color={colors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
                 )}
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        <View style={styles.footer}>
-          <SettingsIcon size={20} color="#6b7280" />
-          <Text style={styles.footerText}>
+        <View style={[styles.footer, { backgroundColor: colors.surface }]}>
+          <SettingsIcon size={20} color={colors.textSecondary} />
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>
             These settings help customize your driving experience and preferences.
           </Text>
         </View>

@@ -2,6 +2,8 @@ const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errorResponse');
 const KYCDocument = require('../models/kycDocumentModel');
 const User = require('../models/userModel');
+const { uploadToCloudinary } = require('../utils/cloudinaryUploader');
+const { Buffer } = require('buffer');
 
 const getKYCDocuments = asyncHandler(async (req, res, next) => {
   const page = parseInt(req.query.page, 10) || 1;
@@ -108,6 +110,155 @@ const deleteKYCDocument = asyncHandler(async (req, res, next) => {
   });
 });
 
+const submitKYC = asyncHandler(async (req, res, next) => {
+  console.log('KYC Submit Request received for user:', req.user?.id);
+
+  const {
+    personalInfo,
+    vehicleInfo,
+    documents,
+    vehiclePhotos
+  } = req.body;
+
+  // Validate required fields
+  if (!personalInfo || !documents) {
+    console.log('KYC Submit: Missing required fields');
+    return next(new ErrorResponse('Personal information and documents are required', 400));
+  }
+
+  // Check if user already has a pending KYC application
+  const existingApplication = await KYCDocument.findOne({
+    userId: req.user.id,
+    status: 'pending'
+  });
+
+  if (existingApplication) {
+    console.log('KYC Submit: User already has pending application');
+    return next(new ErrorResponse('You already have a pending KYC application', 400));
+  }
+
+  console.log('KYC Submit: Processing documents for user:', req.user.id);
+
+  // Process documents with base64 data
+  const processedDocuments = [];
+  for (const doc of documents) {
+    if (doc.base64Data) {
+      try {
+        // Convert base64 to buffer and upload
+        const buffer = Buffer.from(doc.base64Data, 'base64');
+        const fileName = doc.fileName || `document_${doc.type}_${Date.now()}.jpg`;
+
+        // Ensure uploads directory exists
+        const fs = require('fs');
+        const path = require('path');
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        const tempPath = path.join(uploadsDir, `temp_${Date.now()}_${fileName}`);
+
+        // Write buffer to temporary file
+        fs.writeFileSync(tempPath, buffer);
+
+        // Upload to cloudinary
+        const uploadResult = await uploadToCloudinary(tempPath, { folder: 'kyc_documents' });
+
+        // Clean up temp file
+        if (fs.existsSync(tempPath)) {
+          fs.unlinkSync(tempPath);
+        }
+
+        processedDocuments.push({
+          type: doc.type,
+          title: doc.title,
+          uri: uploadResult.secure_url,
+          status: doc.status
+        });
+      } catch (error) {
+        console.error(`Error processing document ${doc.type}:`, error);
+        return next(new ErrorResponse(`Failed to process document ${doc.type}: ${error.message}`, 500));
+      }
+    } else {
+      processedDocuments.push({
+        type: doc.type,
+        title: doc.title,
+        status: doc.status
+      });
+    }
+  }
+
+  // Process vehicle photos for drivers
+  let processedVehiclePhotos = undefined;
+  if (req.user.role === 'driver' && vehiclePhotos) {
+    processedVehiclePhotos = {};
+    const vehiclePhotoFields = ['front', 'side', 'back', 'inside', 'plate'];
+
+    for (const field of vehiclePhotoFields) {
+      const photoData = vehiclePhotos[field];
+      if (photoData && photoData.base64Data) {
+        try {
+          // Convert base64 to buffer and upload
+          const buffer = Buffer.from(photoData.base64Data, 'base64');
+          const fileName = photoData.fileName || `vehicle_${field}_${Date.now()}.jpg`;
+
+          // Ensure uploads directory exists
+          const fs = require('fs');
+          const path = require('path');
+          const uploadsDir = path.join(process.cwd(), 'uploads');
+
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+
+          const tempPath = path.join(uploadsDir, `temp_${Date.now()}_${fileName}`);
+
+          // Write buffer to temporary file
+          fs.writeFileSync(tempPath, buffer);
+
+          // Upload to cloudinary
+          const uploadResult = await uploadToCloudinary(tempPath, { folder: 'vehicle_photos' });
+
+          // Clean up temp file
+          if (fs.existsSync(tempPath)) {
+            fs.unlinkSync(tempPath);
+          }
+
+          processedVehiclePhotos[field] = uploadResult.secure_url;
+        } catch (error) {
+          console.error(`Error processing vehicle photo ${field}:`, error);
+          return next(new ErrorResponse(`Failed to process vehicle photo ${field}: ${error.message}`, 500));
+        }
+      }
+    }
+  }
+
+  // Create KYC document
+  const kycDocument = await KYCDocument.create({
+    userId: req.user.id,
+    personalInfo,
+    vehicleInfo: req.user.role === 'driver' ? vehicleInfo : undefined,
+    documents: processedDocuments,
+    vehiclePhotos: processedVehiclePhotos,
+    status: 'pending',
+    uploadedAt: new Date()
+  });
+
+  console.log('KYC Submit: Document created successfully for user:', req.user.id);
+
+  // Update user's KYC status
+  await User.findByIdAndUpdate(req.user.id, { kycStatus: 'pending' });
+
+  console.log('KYC Submit: User KYC status updated for user:', req.user.id);
+
+  res.status(201).json({
+    success: true,
+    data: kycDocument,
+    message: 'KYC application submitted successfully'
+  });
+});
+
 const getKYCStats = asyncHandler(async (req, res, next) => {
   const stats = await KYCDocument.aggregate([
     {
@@ -138,6 +289,7 @@ const getKYCStats = asyncHandler(async (req, res, next) => {
 });
 
 module.exports = {
+  submitKYC,
   getKYCDocuments,
   getKYCDocument,
   updateKYCDocument,

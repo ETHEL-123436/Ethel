@@ -5,7 +5,7 @@ import { ChevronRight, Settings } from 'lucide-react-native';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function PreferencesScreen() {
-  const { settings, colors, isLoading } = useTheme();
+  const { settings, colors, isLoading, t } = useTheme();
   const { user } = useAuth();
 
   const currentTheme = settings?.theme || 'light';
@@ -33,29 +33,29 @@ export default function PreferencesScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Stack.Screen options={{ title: 'Preferences' }} />
+      <Stack.Screen options={{ title: t('preferences') }} />
 
       {isLoading ? (
         <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-          <Text style={{ color: colors.text }}>Loading preferences...</Text>
+          <Text style={{ color: colors.text }}>{t('loading')}...</Text>
         </View>
       ) : (
         <>
           <View style={[styles.header, { backgroundColor: colors.surface }]}>
             <Settings size={24} color={colors.primary} />
-            <Text style={[styles.title, { color: colors.text }]}>Preferences</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Customize your app experience</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('preferences')}</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('customizeApp')}</Text>
           </View>
 
           <View style={[styles.section, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>App Settings</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('appSettings')}</Text>
 
             <TouchableOpacity
               style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
               onPress={() => router.push('/(settings)/theme-selection')}
             >
               <View style={styles.menuItemContent}>
-                <Text style={[styles.menuText, { color: colors.text }]}>Theme</Text>
+                <Text style={[styles.menuText, { color: colors.text }]}>{t('theme')}</Text>
                 <View style={styles.menuItemRight}>
                   <Text style={[styles.menuValue, { color: colors.textSecondary }]}>{getThemeDisplayName()}</Text>
                   <ChevronRight size={20} color={colors.textSecondary} />
@@ -68,7 +68,7 @@ export default function PreferencesScreen() {
               onPress={() => router.push('/(settings)/language-selection')}
             >
               <View style={styles.menuItemContent}>
-                <Text style={[styles.menuText, { color: colors.text }]}>Language</Text>
+                <Text style={[styles.menuText, { color: colors.text }]}>{t('language')}</Text>
                 <View style={styles.menuItemRight}>
                   <Text style={[styles.menuValue, { color: colors.textSecondary }]}>{getLanguageDisplayName()}</Text>
                   <ChevronRight size={20} color={colors.textSecondary} />
@@ -81,7 +81,7 @@ export default function PreferencesScreen() {
               onPress={() => router.push('/(settings)/notifications')}
             >
               <View style={styles.menuItemContent}>
-                <Text style={[styles.menuText, { color: colors.text }]}>Notifications</Text>
+                <Text style={[styles.menuText, { color: colors.text }]}>{t('notifications')}</Text>
                 <ChevronRight size={20} color={colors.textSecondary} />
               </View>
             </TouchableOpacity>
@@ -90,40 +90,40 @@ export default function PreferencesScreen() {
           {/* Passenger-specific preferences */}
           {user?.role === 'passenger' && (
             <View style={[styles.section, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Ride Preferences</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ridePreferences')}</Text>
 
               <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-                <Text style={[styles.menuText, { color: colors.text }]}>Preferred Vehicle Type</Text>
+                <Text style={[styles.menuText, { color: colors.text }]}>{t('preferredVehicleType')}</Text>
                 <ChevronRight size={20} color={colors.textSecondary} />
               </TouchableOpacity>
 
               <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-                <Text style={[styles.menuText, { color: colors.text }]}>Payment Methods</Text>
+                <Text style={[styles.menuText, { color: colors.text }]}>{t('paymentMethods')}</Text>
                 <ChevronRight size={20} color={colors.textSecondary} />
               </TouchableOpacity>
 
               <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-                <Text style={[styles.menuText, { color: colors.text }]}>Ride History</Text>
+                <Text style={[styles.menuText, { color: colors.text }]}>{t('rideHistory')}</Text>
                 <ChevronRight size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
           )}
 
           <View style={[styles.section, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Account</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('account')}</Text>
 
             <TouchableOpacity
               style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
               onPress={() => router.push('/(settings)/privacy')}
             >
               <View style={styles.menuItemContent}>
-                <Text style={[styles.menuText, { color: colors.text }]}>Privacy Settings</Text>
+                <Text style={[styles.menuText, { color: colors.text }]}>{t('privacySettings')}</Text>
                 <ChevronRight size={20} color={colors.textSecondary} />
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-              <Text style={[styles.menuText, { color: colors.text }]}>Data & Storage</Text>
+              <Text style={[styles.menuText, { color: colors.text }]}>{t('dataStorage')}</Text>
               <ChevronRight size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>

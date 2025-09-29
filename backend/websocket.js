@@ -210,20 +210,23 @@ app.get('/health', (req, res) => {
   });
 });
 
-const PORT = process.env.WEBSOCKET_PORT || 5001;
+// Only start server if this file is run directly (not imported as module)
+if (require.main === module) {
+  const PORT = process.env.WEBSOCKET_PORT || 5001;
 
-server.listen(PORT, () => {
-  console.log(`WebSocket server running on port ${PORT}`);
-  console.log(`Socket.IO server ready for connections`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('WebSocket server closed');
-    process.exit(0);
+  server.listen(PORT, () => {
+    console.log(`Standalone WebSocket server running on port ${PORT}`);
+    console.log(`Socket.IO server ready for connections`);
   });
-});
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+      console.log('WebSocket server closed');
+      process.exit(0);
+    });
+  });
+}
 
 module.exports = { app, server, io };
